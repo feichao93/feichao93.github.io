@@ -1,6 +1,6 @@
 ---
 title: Leetcode-4 Median of Two Sorted Arrays
-data: 2017-02-01 23:33:00
+date: 2017-02-01 23:33:00
 tags: leetcode
 ---
 

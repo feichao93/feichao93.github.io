@@ -24,6 +24,10 @@ main > section {
     margin-bottom: 24px;
 }
 
+main > section:last-child {
+    margin-bottom: 0;
+}
+
 section {
     color: #444444;
 }

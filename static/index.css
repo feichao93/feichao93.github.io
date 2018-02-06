@@ -1,0 +1,68 @@
+body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    width: 900px;
+    margin: auto;
+}
+
+main {
+    position: relative;
+}
+
+.sfc {
+    position: absolute;
+    right: 0;
+    border: 2px solid #cccccc;
+}
+
+.subtitle {
+    color: #666666;
+    font-weight: normal;
+    font-size: 16px;
+}
+
+main > section {
+    margin-bottom: 24px;
+}
+
+section {
+    color: #444444;
+}
+
+section > h1 {
+    font-size: 1.3em;
+    margin-bottom: 0.3em;
+    color: #333333;
+}
+
+.edu-list {
+    list-style: none;
+    padding-left: 24px;
+    margin: 0;
+}
+
+.edu-item {
+    display: flex;
+    line-height: 28px;
+}
+
+.edu-item .time-range {
+    width: 200px;
+}
+
+.edu-item .grade {
+    width: 200px;
+}
+
+.skill-list {
+    padding-left: 36px;
+    margin: 0;
+}
+
+.skill-list > li {
+    line-height: 28px;
+}
+
+.project > h2 {
+    font-size: 16px;
+    margin-bottom: 0.5em;
+}

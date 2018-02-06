@@ -1,17 +1,36 @@
 body {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    width: 900px;
-    margin: auto;
-}
-
-main {
-    position: relative;
 }
 
 .sfc {
-    position: absolute;
-    right: 0;
     border: 2px solid #cccccc;
+    display: block;
+    margin-bottom: 16px;
+}
+
+.sep {
+    display: block;
+}
+
+@media (min-width: 920px) {
+    body {
+        width: 900px;
+        margin: auto;
+    }
+
+    main {
+        position: relative;
+    }
+
+    .sfc {
+        position: absolute;
+        top: 0;
+        right: 0;
+    }
+
+    .sep {
+        display: inline;
+    }
 }
 
 .subtitle {
@@ -40,21 +59,33 @@ section > h1 {
 
 .edu-list {
     list-style: none;
-    padding-left: 24px;
+    padding-left: 1.5rem;
     margin: 0;
 }
 
 .edu-item {
     display: flex;
-    line-height: 28px;
+    flex-direction: column;
+    line-height: 1.8rem;
 }
 
-.edu-item .time-range {
-    width: 200px;
+.grade, .major {
+    padding-left: 1rem;
 }
 
-.edu-item .grade {
-    width: 200px;
+@media (min-width: 920px) {
+    .edu-item {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .edu-item .time-range {
+        flex: 0 0 200px;
+    }
+
+    .edu-item .grade {
+        flex: 0 0 200px;
+    }
 }
 
 .skill-list {
@@ -63,7 +94,7 @@ section > h1 {
 }
 
 .skill-list > li {
-    line-height: 28px;
+    line-height: 1.8rem;
 }
 
 .project > h2 {

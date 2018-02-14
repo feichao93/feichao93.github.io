@@ -240,7 +240,7 @@ const vdom$ = count$.map(count => ... // LINE 5
 
 用回调函数的方式来实现上述功能是非常繁琐的，而在这里适当地应用响应式编程可以大大简化编码。这里我们从结果为导向来整理实现思路：
 
-1. 因为最后的效果是要对地图进行缩放，且还要指定是否使用 transition，根据 D3 的 API 文档，我们使用这样的一个对象来描述所期望的缩放行为： `{ useTransition: boolean; targetTransform: d3.ZoomTransform}`
+1. 因为最后的效果是要对地图进行缩放，且还要指定是否使用 transition，根据 D3 的 API 文档，我们使用这样的一个对象来描述所「期望的缩放行为」： `{ useTransition: boolean; targetTransform: d3.ZoomTransform}`
    1. `useTransition` 比较容易计算，第一次加载地图该值为 false，其他时候均为 true
    2. `targetTransform` 可以通过 `viewBox` 和 `contentBox` 来计算得到。
       1. `viewBox` 和居中对象无关，直接通过获取 SVG 元素的大小就可以计算得到。
@@ -255,7 +255,7 @@ const vdom$ = count$.map(count => ... // LINE 5
 
 ```javascript
 // 注意该文件中代码执行了副作用；不过该文件并不是 cycle 的应用代码；
-// 请更多关注「变化的传播」 (●ˇ∀ˇ●)
+// 本文件中还请更多关注「变化的传播」 (●ˇ∀ˇ●)
 
 // 地图居中信息流  其中的信息包含 useTransition, contentBox 这两个字段
 const mapCentralizeInfo$ = xs
@@ -291,9 +291,10 @@ const traceCentralizeInfo$ = traceToCentralize$
 xs
   // 合并「地图居中信息流」和「轨迹居中信息流」
   .merge(mapCentralizeInfo$, traceCentralizeInfo$)
-  .compose(sampleCombine(viewBox$))
+  .compose(sampleCombine(svg$))
   .addListener({
-    next([{ useTransition, contentBox }, viewBox]) {
+    next([{ useTransition, contentBox }, svg]) {
+      const svgNode = svg.node()
       const viewBox = { width: svgNode.clientWidth, height: svgNode.clientHeight }
       const targetTransform = doCentralize(contentBox, viewBox)
       if (useTransition) {

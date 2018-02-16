@@ -13,6 +13,20 @@ html {
     display: block;
 }
 
+.no-print *{
+    color: steelblue;
+}
+
+.no-print {
+    color: steelblue;
+}
+
+@media print {
+    .no-print {
+        display: none;
+    }
+}
+
 @media (min-width: 920px), print {
     body {
         width: 900px;

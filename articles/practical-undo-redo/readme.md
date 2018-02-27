@@ -1,12 +1,12 @@
-# 实用「撤销重做」指南
+# 基于 Immutable.js 实现撤销重做功能
 
-浏览器的功能越来越强大，许多原来由其他客户端提供的功能渐渐转移到了前端，前端应用也越来越复杂。许多前端应用，尤其是一些在线编辑软件，运行时需要不断处理用户的交互，提供了撤消重做功能来保证交互的流畅性。不过为一个应用实现撤销重做功能并不是一件容易的事情。[Redux官方文档中](https://redux.js.org/recipes/implementing-undo-history) 介绍了如何在 redux 应用中实现撤销重做功能。基于 redux 的撤销功能是一个自顶向下的方案：引入 redux-undo 之后所有的操作都变为了「可撤销的」，然后我们不断修改其配置使得撤销功能变得越来越好用（我猜这也是 [redux-undo 有那么多配置项](https://github.com/omnidan/redux-undo#configuration) 的原因)。
+浏览器的功能越来越强大，许多原来由其他客户端提供的功能渐渐转移到了前端，前端应用也越来越复杂。许多前端应用，尤其是一些在线编辑软件，运行时需要不断处理用户的交互，提供了撤消重做功能来保证交互的流畅性。不过为一个应用实现撤销重做功能并不是一件容易的事情。[Redux 官方文档中](https://redux.js.org/recipes/implementing-undo-history) 介绍了如何在 redux 应用中实现撤销重做功能。基于 redux 的撤销功能是一个自顶向下的方案：引入 redux-undo 之后所有的操作都变为了「可撤销的」，然后我们不断修改其配置使得撤销功能变得越来越好用（我猜这也是 [redux-undo 有那么多配置项](https://github.com/omnidan/redux-undo#configuration) 的原因)。
 
 本文将采用自底向上的思路，以一个简易的在线画图工具为例子，使用 [TypeScript](https://www.typescriptlang.org/)、[Immutable.js](https://facebook.github.io/immutable-js/) 实现一个实用的「撤消重做」功能。大致效果如下图所示：
 
 ![redo-undo](redo-undo.gif)
 
-上图看不清的话，可以看[这里](https://raw.githubusercontent.com/shinima/shinima.github.io/master/articles/practical-undo-redo/redo-undo.gif)。下面的 TypeScript 代码需要语法高亮的话，可以看[这里](https://github.com/shinima/shinima.github.io/tree/master/articles/practical-undo-redo)。
+上图看不清的话，可以看[这里](https://raw.githubusercontent.com/shinima/shinima.github.io/master/articles/practical-undo-redo/redo-undo.gif)。下面的 TypeScript 代码缺少语法高亮的话，可以看[这里](https://github.com/shinima/shinima.github.io/tree/master/articles/practical-undo-redo)。
 
 ## 第一步：确定哪些状态需要历史记录，创建自定义的 State 类
 
@@ -42,8 +42,12 @@ export default abstract class Action {
   abstract next(state: State): State
   abstract prev(state: State): State
 
-  prepare(appHistory: AppHistory): AppHistory { return appHistory }
-  getMessage() { return this.constructor.name }
+  prepare(appHistory: AppHistory): AppHistory {
+    return appHistory
+  }
+  getMessage() {
+    return this.constructor.name
+  }
 }
 ```
 
@@ -72,18 +76,16 @@ export default class AddItemAction extends Action {
   }
 
   next(state: State) {
-    return state
-      .setIn(['items', this.newItem.id], this.newItem)
-      .set('selection', this.newItemId)
+    return state.setIn(['items', this.newItem.id], this.newItem).set('selection', this.newItemId)
   }
 
   prev(state: State) {
-    return state
-      .deleteIn(['items', this.newItem.id])
-      .set('selection', this.prevSelection)
+    return state.deleteIn(['items', this.newItem.id]).set('selection', this.prevSelection)
   }
 
-  getMessage() { return `Add item ${this.newItem.id}` }
+  getMessage() {
+    return `Add item ${this.newItem.id}`
+  }
 }
 ```
 
@@ -135,13 +137,16 @@ const AppHistoryRecord = Record({
 })
 
 export default class AppHistory extends AppHistoryRecord {
-  pop() { // 移除最后一项操作记录
-    return this
-      .update('list', list => list.splice(this.index, 1))
-      .update('index', x => x - 1)
+  pop() {
+    // 移除最后一项操作记录
+    return this.update('list', list => list.splice(this.index, 1)).update('index', x => x - 1)
   }
-  getLastAction() { return this.index === -1 ? emptyAction : this.list.get(this.index) }
-  getNextAction() { return this.list.get(this.index + 1, emptyAction) }
+  getLastAction() {
+    return this.index === -1 ? emptyAction : this.list.get(this.index)
+  }
+  getNextAction() {
+    return this.list.get(this.index + 1, emptyAction)
+  }
 
   apply(action: Action) {
     if (action === emptyAction) return this
@@ -188,7 +193,8 @@ function reducer(history: AppHistory, action: HybridAction): AppHistory {
     return history.undo()
   } else if (action === redo) {
     return history.redo()
-  } else { // 常规的 Action
+  } else {
+    // 常规的 Action
     // 注意这里需要调用prepare方法，好让该action「准备好」
     return action.prepare(history).apply(action)
   }
@@ -200,7 +206,7 @@ const appHistory$: Stream<AppHistory> = action$.fold(reducer, new AppHistory())
 const state$ = appHistory$.map(h => h.state)
 
 // 如果是用回调函数的话，大概像这样使用reducer
-onActionHappen = function (action: HybridAction) {
+onActionHappen = function(action: HybridAction) {
   const nextHistory = reducer(getLastHistory(), action)
   updateAppHistory(nextHistory)
   updateState(nextHistory.state)
@@ -252,7 +258,9 @@ export default class MoveItemAction extends Action {
     // 撤销的时候我们直接使用已经保存的prevItem即可
     return state.setIn(['items', this.itemId], this.prevItem)
   }
-  getMessage() { /* ... */ }
+  getMessage() {
+    /* ... */
+  }
 }
 ```
 

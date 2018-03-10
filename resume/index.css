@@ -13,7 +13,17 @@ html {
     display: block;
 }
 
-.no-print *{
+.print-only {
+    display: none;
+}
+
+@media print {
+    .print-only {
+        display: block;
+    }
+}
+
+.no-print * {
     color: steelblue;
 }
 

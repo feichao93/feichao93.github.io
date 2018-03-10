@@ -58,7 +58,7 @@
   <section>
     <h1>项目经历</h1>
     <section class=project>
-      <h2>Temme (147 stars)</h2>
+      <h2>Temme (148 stars)</h2>
       从 HTML 中提取 JSON 数据的开源工具。在 CSS 选择器的基础上使用 PEG.js 定义了额外的语法来抓取 HTML
       中所需要的字段，支持多字段选取、列表选取、格式处理等功能。
       该工具包含了完善的文档、测试、实例，设置了持续集成并发布在 NPM 上。项目地址：
@@ -72,13 +72,13 @@
       构建游戏数据结构，使用 Redux
       管理全局数据，使用 redux-saga 处理复杂的游戏逻辑；实现了简单的 AI 用于控制敌方坦克，AI 程序运行在 web worker
       中，使用消息传递的方式和游戏主线程进行通信；实现了一个额外的关卡编辑器，方便用户创建自定义的关卡。
-      游戏地址：<a href="http://shinima.pw/battle-city" target=_blank>http://shinima.pw/battle-city</a>
+      游戏地址：<a href="http://shinima.pw/battle-city/" target=_blank>http://shinima.pw/battle-city/</a>
       <br>类似项目：扫雷复刻版
       <a href="http://shinima.pw/minesweeper/" target=_blank>http://shinima.pw/minesweeper/</a>
     </section>
     <section class=project>
       <h2>室内空间数据相关工具 (2018)</h2>
-      该项目包括 <a href="http://shinima.pw/editor/" target=_blank>SVG 编辑器（仍在开发中）</a> 和室内空间数据可视化工具。
+      该项目包括 <a href="http://shinima.pw/editor/" target=_blank>SVG 编辑器</a> 和室内空间数据可视化工具。
       编辑器主要功能是绘制多边形等形状，以及将语义信息附加到绘制的形状上。编辑器提供了丰富的快捷键和自动对齐功能，可以完成较为复杂的图形绘制。编辑器采用了响应式编程框架
       Cycle.js，对键盘、鼠标、用户行为等进行了合理抽象，用简洁直观的代码清晰地描述出了应用的数据流。编辑器详情请见 GitHub 仓库：
       <a href="https://github.com/shinima/editor" target=_blank>
@@ -86,7 +86,7 @@
       </a>
       <br>
       可视化工具所用技术框架与编辑器相同，在线版本网址：
-      <a href="http://shinima.pw/viewer" target=_blank>http://shinima.pw/viewer</a>
+      <a href="http://shinima.pw/viewer/" target=_blank>http://shinima.pw/viewer/</a>
     </section>
     <section class=project>
       <h2>购物中心数据分析平台前端 (2016.09 - 2017.04)</h2>
@@ -94,7 +94,7 @@
     </section>
   </section>
   <section class=no-print>
-    <h1>其他相关内容</h1>
+    <h1>其他创作</h1>
     <ul>
       <li>Temme 的中文教程：
         <a href="https://zhuanlan.zhihu.com/p/31624732" target=_blank>
@@ -102,21 +102,39 @@
         </a>
       </li>
       <li>基于 Immutable.js 实现撤销重做功能：
-        <a
-          href="https://zhuanlan.zhihu.com/p/34026505"
-          target=_blank>
+        <a href="https://zhuanlan.zhihu.com/p/34026505" target=_blank>
           https://zhuanlan.zhihu.com/p/34026505
         </a>
       </li>
       <li>对 Cycle.js 的一些思考：
-        <a
-          href="https://github.com/shinima/shinima.github.io/tree/master/articles/thinking-of-cycle"
-          target=_blank>
-          https://github.com/shinima/shinima.github.io/tree/master/articles/thinking-of-cycle
+        <a href="https://zhuanlan.zhihu.com/p/34394256" target=_blank>
+          https://zhuanlan.zhihu.com/p/34394256
+        </a>
+      </li>
+      <li>
+        <a href="https://github.com/shinima/react-svg-canvas" target=_blank>
+          react-svg-canvas：将 React 生成的 SVG 虚拟文档节点渲染到 Canvas 上的简单类库
+        </a>
+      </li>
+      <li>
+        <a href="https://github.com/shinima/tetris" target=_blank>
+          一个简单的俄罗斯方块游戏（包含了一个困难模式）
         </a>
       </li>
     </ul>
   </section>
+  <section class="print-only">
+    目前正在查看的简历版本是 <span id=current-time></span> 的快照，可以访问
+    <a href="http://shinima.pw/resume/" target=_blank>
+      http://shinima.pw/resume/
+    </a>
+    来获取最新版本。
+  </section>
 </main>
+<script>
+  var d = new Date()
+  var s = d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日' + d.getHours() + '时'
+  document.getElementById('current-time').innerText = s
+</script>
 </body>
 </html>

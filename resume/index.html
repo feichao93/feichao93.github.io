@@ -5,19 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Resume</title>
   <link rel="stylesheet" href="index.css">
-  <!-- Global site tag (gtag.js) - Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-115495298-1"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-
-    function gtag() {
-      dataLayer.push(arguments);
-    }
-
-    gtag('js', new Date());
-
-    gtag('config', 'UA-115495298-1');
-  </script>
 </head>
 <body>
 <main>
@@ -88,7 +75,15 @@
       </a>
     </section>
     <section class=project>
-      <h2>坦克大战复刻版</h2>
+      <h2>坦克大战复刻版
+        <iframe
+          src="https://ghbtns.com/github-btn.html?user=shinima&repo=battle-city&type=star&count=true"
+          frameborder="0"
+          scrolling="0"
+          width="170px"
+          height="20px"
+        ></iframe>
+      </h2>
       基于原版素材，主要使用 TypeScript 和 React 进行实现，独立完成整体框架设计与具体实现；技术选型方面主要使用 React 生成 SVG，使用 Immutable.js
       构建游戏数据结构，使用 Redux 管理全局数据，使用 redux-saga 处理复杂的游戏逻辑；针对鼠标的交互方式设计并实现了新的关卡编辑器，并提供了关卡管理功能。
       游戏地址：<a href="http://shinima.pw/battle-city/" target=_blank>http://shinima.pw/battle-city/</a>

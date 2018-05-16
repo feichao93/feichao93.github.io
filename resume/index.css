@@ -123,4 +123,9 @@ section > h1 {
 
 .project > h2 {
     font-size: 1.15rem;
+    margin-bottom: 0.4em;
+}
+
+.small-project {
+    margin: 0.4em 0;
 }

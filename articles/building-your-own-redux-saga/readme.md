@@ -1,14 +1,16 @@
 # Building Your Own Redux-Saga
 
-知乎上已经有不少介绍 redux-saga 的好文章了，例如[redux-saga 实践总结](https://zhuanlan.zhihu.com/p/23012870)、[浅析redux-saga实现原理](https://zhuanlan.zhihu.com/p/30098155)、[Redux-Saga 漫谈](https://zhuanlan.zhihu.com/p/35437092)。本文不讨论 redux-saga 的使用方式，而是介绍其实现原理，并从零开始一步步地用代码构建 little-saga ———— 一个 redux-saga 的简单版本。
+知乎上已经有不少介绍 redux-saga 的好文章了，例如[redux-saga 实践总结](https://zhuanlan.zhihu.com/p/23012870)、[浅析redux-saga实现原理](https://zhuanlan.zhihu.com/p/30098155)、[Redux-Saga 漫谈](https://zhuanlan.zhihu.com/p/35437092)。本文不讨论 redux-saga 的使用方式，而是介绍其实现原理，并一步步地用代码构建 little-saga —— 一个 redux-saga 的简单版本。
 
-本文涉及的 redux-saga 源码都来自 [redux-saga v1.0.0-beta.1](https://github.com/redux-saga/redux-saga/tree/v1.0.0-beta.1) 版本。redux-saga 对许多 edge-case 做了处理，部分代码比较晦涩，而 little-saga 则进行了很多简化，有一些实现细节是不一样的。
+几乎所有（对的，就是几乎所有 =。=）的 little-saga 代码都参考了 redux-saga，参考的版本为 redux-saga v1.0.0-beta.1。redux-saga 对许多边界情况做了处理，部分代码比较晦涩，而 little-saga 则进行了大量简化，所以两者有不少不同的实现细节。本文中出现的代码都是 little-saga 的，不过我偶尔也会附上相应的 redux-saga 源码链接，大家可以对照着看。
 
-## (todo)
+## (todo) 名词解释
 
 (todo) 将 iter 重命名为 iterator; effect-producer; effect-runner; effects 消费者直接使用 redux-saga 时，redux-saga 是消费者，而我们的代码一直充当着 effects 生产者的角色。
 
 很多时候也可以将 redux-saga 看作一种「请求-响应」模型，我们业务代码生产 effects 以发起「请求」，而 redux-saga 负责消费这些 effects 并将响应返回给业务代码。
+
+saga实例 / saga函数 / task
 
 ## 1.1 生成器与 for-of 循环
 
@@ -127,6 +129,7 @@ const iterator = gen()
 
 function next(arg, isErr) {
   // 注意驱动函数多了参数 isErr，用来表示是否发生了错误
+  // 不过我们在这里先忽略isErr为true的情况
   const { done, value } = iterator.next(arg)
   if (done) {
     return
@@ -147,17 +150,155 @@ function next(arg, isErr) {
 next() // kick start!
 ```
 
+在 redux-saga 中，effect 是一个由[函数 effect](https://github.com/redux-saga/redux-saga/blob/v1.0.0-beta.1/packages/core/src/internal/io.js#L24) 生成、`[IO]` 字段为 `true` 的对象。little-saga 使用数组来表示 effect；数组的第一个元素为字符串，用于表示 effect 的类型，剩余元素为 effect 的参数。
+
 (todo) 前面几个小节介绍了 ES2015 生成器的特性，如果约定一些常见的 effect 类型，并恰当使用这些类型的话，可以用生成器语法写出富有表达力的代码。
 
-## 1.6 (todo) proc 初步实现
+## 1.6 redux-saga callback style
 
-## 1.7 (todo) callback style / continuation
+在 Node.js 中，异步回调函数往往使用 error-first 的模式：第一个参数为 err，如果一个异步操作发生了错误，那么错误会通过 err 参数传递回来；第二个参数用于传递正确的操作结果，如果异步操作没有发生错误，那么操作结果会通过该参数进行传递。error-first 模式大量用于 node 核心模块（例如 [fs 模块](https://nodejs.org/dist/latest-v8.x/docs/api/fs.html)）和第三方库（例如 [async 模块](http://caolan.github.io/async/)），可以阅读[该文章](http://fredkschott.com/post/2014/03/understanding-error-first-callbacks-in-node-js/)了解更多信息。
 
-这一节可以往上调整
+而在 redux-saga 中，异步回调函数的第一个参数是操作结果，第二个参数是一个布尔值，表示是否发生了错误。我们称该风格为 redux-saga callback style，其类型信息用 TypeScript 表示如下：
 
-`type Callback = (result: any, isErr: boolean) => void`
+```typescript
+type Callback = (result: any, isErr: boolean) => void
+```
 
-(todo) 可以和 nodejs 的callback style结合讲一讲。
+redux-saga 源码中存在着大量该风格的回调函数，相应的变量名也有好几个：`cont` / `cb` / `currCb`。仅在 [proc.js 文件中](https://github.com/redux-saga/redux-saga/blob/v1.0.0-beta.1/packages/core/src/internal/proc.js)进行搜索，这些变量名也出现了 50 多次。在后面的代码中，我们都将使用该风格来实现 little-saga。
+
+## 1.7 cancellation
+
+redux-saga 的一大特点就是 effects 是可取消的，并且支持使用 try-catch-finally 的语法将清理逻辑放在 finally 语句块中。官方文档中也对[任务取消](https://redux-saga.js.org/docs/advanced/TaskCancellation.html)做了说明。
+
+在 redux-saga 具体实现中，调用者（caller）会将回调函数 cb 传递给被调用者（callee），当 callee 完成异步任务时，调用 cb 来把结果告诉给 caller。而 cancellation 机制是这么实现的：如果一个操作是可取消的话，callee 需要将「取消时的逻辑」放在 cb.cancel 上，这样一来当 caller 想要取消该异步操作时，直接调用 cb.cancel() 即可。
+
+文章[如何取消你的 Promise？](https://juejin.im/post/5a32705a6fb9a045117127fa)中也提到了多种取消 Promise 的方法，其中生成器是最具扩展性的方式，有兴趣的同学可以了解一下
+
+## 1.8 digestEffect
+
+一个 Promise 一旦 resolve/reject 之后，就不能再改变状态了。一个 effect 也是类似，一旦完成或是被取消，就不能再改变状态，「完成时的回调函数」和「被取消时的回调函数」加起来只能最多被调用一次。也就是说，effect 的「完成」和「被取消」是互斥的。函数 digestEffect 用变量 effectSettled 记录了一个 effect 是否已经 settled，保证了上述互斥性。digestEffect 也调用了 normalizeEffect 来规范化 effect，这样一来，对于 promise/iterator，我们可以在 effect-producer 直接 yield 这些对象，而不需要将它们包裹在数组中。
+
+```javascript
+const noop = () => null
+const is = {
+  func: /* 判断参数是否函数 */
+  string: /* 判断参数是否字符串 */
+  /* ...... */
+}
+
+function digestEffect(rawEffect, cb) {
+  let effectSettled = false
+
+  function currCb(res, isErr) {
+    if (effectSettled) {
+      return
+    }
+    effectSettled = true
+    cb.cancel = noop
+    cb(res, isErr)
+  }
+  currCb.cancel = noop
+
+  cb.cancel = () => {
+    if (effectSettled) {
+      return
+    }
+    effectSettled = true
+    try {
+      currCb.cancel()
+    } catch (err) {
+      console.error(err)
+    }
+    currCb.cancel = noop
+  }
+
+  runEffect(normalizeEffect(rawEffect), currCb)
+}
+
+function normalizeEffect(effect) {
+  if (is.string(effect)) {
+    return [effect]
+  } else if (is.promise(effect)) {
+    return ['promise', effect]
+  } else if (is.iterator(effect)) {
+    return ['iterator', effect]
+  } else if (is.array(effect)) {
+    return effect
+  } else {
+    throw new Error('Unable to normalize effect')
+  }
+}
+```
+
+## 1.9 (todo) proc 初步实现
+
+```javascript
+const TASK_CANCEL = Symbol('TASK_CANCEL')
+const CANCEL = Symbol('CANCEL')
+
+function proc(iterator, parentContext, cont) {
+  cont.cancel = cancel
+  next()
+
+  // return task 这里需要返回一个 Task 对象
+
+  function next(arg, isErr) {
+    try {
+      let result
+      if (isErr) {
+        result = iterator.throw(arg)
+      } else if (arg === TASK_CANCEL) {
+        next.cancel()
+        result = iterator.return(TASK_CANCEL)
+      } else {
+        result = iterator.next(arg)
+      }
+
+      if (!result.done) {
+        digestEffect(result.value, next)
+      } else {
+        cont(result.value)
+      }
+    } catch (error) {
+      cont(error, true)
+    }
+  }
+  
+  function digestEffect(rawEffect, cb) { /* 参见 1.8 digestEffect */ }
+  function normalizeEffect(effect) { /* 参见 1.8 digestEffect */ }
+
+  function cancel() {
+    cont(TASK_CANCEL)
+  }
+
+  function runEffect(effect, currCb) {
+    const effectType = effect[0]
+    if (effectType === 'promise') {
+      resolvePromise(effect, ctx, currCb)
+    } else if (effectType === 'iterator') {
+      resolveIterator(iterator, ctx, currCb)
+    } else {
+      throw new Error('Unknown effect type')
+    }
+  }
+
+  function resolvePromise([effectType, promise], ctx, cb) {
+    const cancelPromise = promise[CANCEL]
+    if (is.func(cancelPromise)) {
+      cb.cancel = cancelPromise
+    }
+    promise.then(cb, error => cb(error, true))
+  }
+
+  function resolveIterator([effectType, iterator], ctx, cb) {
+    proc(iterator, ctx, cb)
+  }
+}
+```
+
+
+
+
 
 ## 2.1 Task
 
@@ -211,7 +352,7 @@ redux-saga 的文档也[对 fork model 进行了详细的说明](https://redux-s
 
 ## 2.3 fork-queue
 
-fork-queue 是 fork model 的具体实现的一部分。redux-saga 使用了 [forkQueue](https://github.com/redux-saga/redux-saga/blob/v1.0.0-beta.1/packages/core/src/internal/proc.js#L73) 来实现，在 little-saga 中我们将使用同样的做法。
+fork-queue 是 fork model 的具体实现。redux-saga 使用了 [forkQueue](https://github.com/redux-saga/redux-saga/blob/v1.0.0-beta.1/packages/core/src/internal/proc.js#L73) 来实现，在 little-saga 中我们将使用同样的做法。
 
 每一个 saga 实例可以用一个 Task 对象进行描述，为了实现 fork model，每一个 saga 实例开始运行时，我们需要用一个数组来保存 child-tasks。我们来看看 forkQueue 的接口：
 
@@ -297,10 +438,18 @@ function forkQueue(mainTask, cb) {
 }
 ```
 
+## 2.4 context
 
+每一个 task 都有其对应的 context 对象，用于保存该 task 运行时的上下文信息。在 redux-saga 中我们可以使用 getContext/setContext 读写该对象。context 的一大特性是 child-task 会使用原型链的方式继承 parent-task context。当尝试访问 context 中的某个属性时，不仅会在当前 task context 对象中搜寻该属性，也会在 parent-task context 对象进行搜索，以及 parent-task 的 parent-task，依次层层往上搜索，直到找到该属性或是到达 rootSaga。该「继承」在 [redux-saga 中的实现](https://github.com/redux-saga/redux-saga/blob/v1.0.0-beta.1/packages/core/src/internal/proc.js#L194)也非常简单，只有一行代码：`const taskContext = Object.create(parentContext)`。
 
-saga 实例运行时可以动态地 fork 新的 child
+context 是一个强大的机制，然而在 redux-saga 中似乎很少被提起。在 React 中，React context 用途非常广泛，react-redux / react-router 等相关类库都是基于该机制实现的。在 little-saga 中，我们将充分利用 context 机制，并使用该机制实现「effect 类型拓展」、「stdChannel」、「连接 redux store」等功能。这些机制的实现会在本文后面提到。
 
-例如应用执行了 `yield cancel(task1)`，那么 task1 的就需要对其
+## 2.5 (todo)proc 详解
 
-(todo) 需要讲清楚 模型fork-model 和 实现fork-queue 之间的关系。
+## 2.6 effect 类型拓展
+
+## 2.7 race/all effect
+
+## 2.8 channel 与 take/put effect
+
+## 3.1 (todo)scheduler

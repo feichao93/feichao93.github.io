@@ -49,7 +49,7 @@ while (true) {
 // 输出 1, 2, 3 ... 8, 9
 ```
 
-(todo) 代码执行的顺序的说明
+(todo) 迭代器的 `next/throw/return` 方法介绍，代码执行的顺序的说明
 
 ## 1.3 使用递归函数异步消费迭代器
 
@@ -174,7 +174,7 @@ redux-saga 的一大特点就是 effects 是可取消的，并且支持使用 tr
 
 文章[如何取消你的 Promise？](https://juejin.im/post/5a32705a6fb9a045117127fa)中也提到了多种取消 Promise 的方法，其中生成器是最具扩展性的方式，有兴趣的同学可以了解一下
 
-## 1.8 digestEffect
+## 1.8 函数 `digestEffect`
 
 一个 Promise 一旦 resolve/reject 之后，就不能再改变状态了。一个 effect 也是类似，一旦完成或是被取消，就不能再改变状态，「完成时的回调函数」和「被取消时的回调函数」加起来只能最多被调用一次。也就是说，effect 的「完成」和「被取消」是互斥的。函数 digestEffect 用变量 effectSettled 记录了一个 effect 是否已经 settled，保证了上述互斥性。digestEffect 也调用了 normalizeEffect 来规范化 effect，这样一来，对于 promise/iterator，我们可以在 effect-producer 直接 yield 这些对象，而不需要将它们包裹在数组中。
 
@@ -230,24 +230,29 @@ function normalizeEffect(effect) {
 }
 ```
 
-## 1.9 (todo) proc 初步实现
+## 1.9 proc 初步实现
+
+有了上面的基础，我们就可以初步实现 proc 函数了。proc函数用于运行一个迭代器，是redux-saga中最重要的函数之一。
 
 ```javascript
 const TASK_CANCEL = Symbol('TASK_CANCEL')
 const CANCEL = Symbol('CANCEL')
 
 function proc(iterator, parentContext, cont) {
+  // 设置当前task的cancel逻辑
   cont.cancel = cancel
   next()
 
-  // return task 这里需要返回一个 Task 对象
+  // return task 这里需要返回一个Task对象，不过在这里还没有实现
 
   function next(arg, isErr) {
     try {
       let result
       if (isErr) {
+        // 如果发生了错误，需要将错误信息返回给effect-producer
         result = iterator.throw(arg)
       } else if (arg === TASK_CANCEL) {
+        // next.cancel由当前正在执行的effectRunner所设置
         next.cancel()
         result = iterator.return(TASK_CANCEL)
       } else {
@@ -255,11 +260,14 @@ function proc(iterator, parentContext, cont) {
       }
 
       if (!result.done) {
+        // 调用digestEffect来规范化并执行该effect
         digestEffect(result.value, next)
       } else {
+        // 迭代器执行完毕，调用cont将结果返回给上层
         cont(result.value)
       }
     } catch (error) {
+      // 迭代器运行发生错误，调用cont将错误返回给上层
       cont(error, true)
     }
   }
@@ -271,13 +279,14 @@ function proc(iterator, parentContext, cont) {
     cont(TASK_CANCEL)
   }
 
+  // 执行effect，根据effect的类型调用不同的effectRunner
   function runEffect(effect, currCb) {
     const effectType = effect[0]
     if (effectType === 'promise') {
       resolvePromise(effect, ctx, currCb)
     } else if (effectType === 'iterator') {
       resolveIterator(iterator, ctx, currCb)
-    } else {
+    } else { // 拓展这里的 if-else 便可以拓展新的effect类型
       throw new Error('Unknown effect type')
     }
   }
@@ -285,6 +294,7 @@ function proc(iterator, parentContext, cont) {
   function resolvePromise([effectType, promise], ctx, cb) {
     const cancelPromise = promise[CANCEL]
     if (is.func(cancelPromise)) {
+      // 设置promise的cancel逻辑
       cb.cancel = cancelPromise
     }
     promise.then(cb, error => cb(error, true))
@@ -295,10 +305,6 @@ function proc(iterator, parentContext, cont) {
   }
 }
 ```
-
-
-
-
 
 ## 2.1 Task
 
@@ -322,9 +328,7 @@ interface Task {
 }
 ```
 
-迭代器/saga实例在运行时，内部逻辑也许非常复杂，不过从外界看来，迭代器最终只返回一个异步结果。仅从返回值的角度看，我们用一个 Promise 就可以表示saga实例。Task 对象包含了 `toPromise()` 方法，该方法会返回saga实例对应的promise。在其他方面，saga实例的功能是要比Promise丰富的：`Task#cancel()` 方法使得saga实例允许被取消；`Task#isXXX()` 等方法可以查询saga实例的运行状态；`Task#result()` / `Task#error()` 方法可以获得saga实例的结果。
-
-(todo)async函数调用后，内部逻辑也许非常复杂，不过从调用者的角度看，一个 Promise 对象就……。
+async函数被调用后，内部逻辑也许非常复杂，不过调用者只能拿到一个 Promise 对象，该对象就表示了此次调用的异步结果。类似的，迭代器/saga实例在运行时，内部逻辑也可能异常复杂，但最终只返回一个异步结果。仅从返回值的角度看，我们用一个 Promise 就可以用来表达saga实例/迭代器的结果了。Task 对象包含了 `toPromise()` 方法，该方法会返回saga实例对应的promise。在其他方面，saga实例的功能是要比Promise丰富的：`Task#cancel()` 方法使得saga实例允许被取消；`Task#isXXX()` 等方法可以查询saga实例的运行状态；`Task#result()` / `Task#error()` 方法可以获得saga实例的结果。当然，这些额外的功能需要用额外的字段和字段来进行实现。
 
 ## 2.2 fork model
 
@@ -350,9 +354,9 @@ redux-saga 的文档也[对 fork model 进行了详细的说明](https://redux-s
 * 错误传播：假设 AIPlayer 发生错误，那么 addAIHandler 会收到该错误；假设 addAIHandler 无法处理该错误，该错误就会传播给 AIMaster。**当一个节点发生错误时，错误会沿着树向根节点向上传播，直到某个某个节点捕获该错误。**
 * 取消：gameSaga 被取消时，tickEmitter/AIMaster/humanPlayer 会同时被取消，而取消 AIMaster 被取消时，AIHandler 会被同时取消。**取消一个节点时，该节点对应的整个子树都将被取消。**
 
-## 2.3 fork-queue
+## 2.3 函数 `forkQueue`
 
-fork-queue 是 fork model 的具体实现。redux-saga 使用了 [forkQueue](https://github.com/redux-saga/redux-saga/blob/v1.0.0-beta.1/packages/core/src/internal/proc.js#L73) 来实现，在 little-saga 中我们将使用同样的做法。
+函数 forkQueue 是 fork model 的具体实现（的一部分）。redux-saga 使用了 [forkQueue](https://github.com/redux-saga/redux-saga/blob/v1.0.0-beta.1/packages/core/src/internal/proc.js#L73) 来实现，在 little-saga 中我们将使用同样的做法。
 
 每一个 saga 实例可以用一个 Task 对象进行描述，为了实现 fork model，每一个 saga 实例开始运行时，我们需要用一个数组来保存 child-tasks。我们来看看 forkQueue 的接口：
 
@@ -444,7 +448,9 @@ function forkQueue(mainTask, cb) {
 
 context 是一个强大的机制，然而在 redux-saga 中似乎很少被提起。在 React 中，React context 用途非常广泛，react-redux / react-router 等相关类库都是基于该机制实现的。在 little-saga 中，我们将充分利用 context 机制，并使用该机制实现「effect 类型拓展」、「stdChannel」、「连接 redux store」等功能。这些机制的实现会在本文后面提到。
 
-## 2.5 (todo)proc 详解
+## 2.5 (todo) proc 完整实现
+
+proc 函数较长(todo 添加little-saga的proc的链接)，下面会分几部分进行书写。
 
 ## 2.6 effect 类型拓展
 

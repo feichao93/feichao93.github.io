@@ -6,7 +6,7 @@
 
 ![screenshot](https://raw.githubusercontent.com/shinima/vscode-temme/master/docs/vscode-temme.gif)
 
-上图展示了使用该插件来抓取 [芳文社番剧列表](http://bangumi.tv/anime/tag/%E8%8A%B3%E6%96%87%E7%A4%BE/?sort=date) 的整个过程。抓取结果为一个列表，每个列表元素包含了 id、番剧名称、图片链接、评分等信息。下图展示了网页的页面结构和对应的 CSS 选择器，这些选择器也都出现在了temme 选择器中。如果你熟悉 CSS 选择器的话，那么对照上下两张图片，很容易理解其中各个选择器的含义。
+上图展示了使用该插件来抓取 [芳文社番剧列表](http://bangumi.tv/anime/tag/%E8%8A%B3%E6%96%87%E7%A4%BE/?sort=date) 的整个过程。抓取结果为一个列表，每个列表元素包含了 id、番剧名称、图片链接、评分等信息。下图展示了网页的页面结构和对应的 CSS 选择器，这些选择器也都出现在了 temme 选择器中。如果你熟悉 CSS 选择器的话，那么对照上下两张图片，很容易理解其中各个选择器的含义。
 
 ![selector-descriptions](selector-descriptions.jpg)
 
@@ -28,11 +28,11 @@
 
 上图中子选择器共有五个，每一个子选择器抓取一个对应字段，这里一个一个进行分析：
 
-1. `&[id=$id];` 表示将父元素（也就是 li 元素）的 **id特性** 抓取到结果的 `id` 字段。`&` 符号表示父元素引用，和 CSS 预处理器（Less/Sass/Stylus）中的含义是一样的。
-2. `.inner a{$name}` 表示将 `.inner a` 对应的元素的 **文本** 抓取到结果的 `name` 字段。
-3. `img[src=$imgUrl]` 表示将 `img` 对应的元素的 **src特性** 抓取到结果的 `imgUrl` 字段。在 CSS 选择器中，`img[src=imgUrl]` 表示选取 src 为 imgUrl 的那些 img 元素；temme 这里添加了 `$` 符号，其含义就变成捕获，这个语法还是挺容易记住的 (o´ω`o)。
-4. `.fade{$rate|Number}` 和 2 类似，不过这里多了 `|Number` 用来将结果从字符串转化为数字。
-5. `.rank{$rank|firstNumber}` 和 4 类似，不过这里的 `firstNumber` 是自定义的过滤器，用来获取一个字符串中第一个数字，该过滤器定义在选择器文件的下方。
+1.  `&[id=$id];` 表示将父元素（也就是 li 元素）的 **id 特性** 抓取到结果的 `id` 字段。`&` 符号表示父元素引用，和 CSS 预处理器（Less/Sass/Stylus）中的含义是一样的。
+2.  `.inner a{$name}` 表示将 `.inner a` 对应的元素的 **文本** 抓取到结果的 `name` 字段。
+3.  `img[src=$imgUrl]` 表示将 `img` 对应的元素的 **src 特性** 抓取到结果的 `imgUrl` 字段。在 CSS 选择器中，`img[src=imgUrl]` 表示选取 src 为 imgUrl 的那些 img 元素；temme 这里添加了 `$` 符号，其含义就变成捕获，这个语法还是挺容易记住的 (o´ω`o)。
+4.  `.fade{$rate|Number}` 和 2 类似，不过这里多了 `|Number` 用来将结果从字符串转化为数字。
+5.  `.rank{$rank|firstNumber}` 和 4 类似，不过这里的 `firstNumber` 是自定义的过滤器，用来获取一个字符串中第一个数字，该过滤器定义在选择器文件的下方。
 
 **第四步**
 

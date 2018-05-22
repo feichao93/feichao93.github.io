@@ -6,12 +6,12 @@
 
 Cycle 可以分为两个部分：
 
-1. 定义部分：定义了应用的输入/输出格式，定义了「应用以 `run(App, drivers)` 的方式运行」
-2. 模块部分：@cycle/run 核心模块，提供 `run` 函数；以及 @cycle/dom、@cycle/http 等驱动模块。
+1.  定义部分：定义了应用的输入/输出格式，定义了「应用以 `run(App, drivers)` 的方式运行」
+2.  模块部分：@cycle/run 核心模块，提供 `run` 函数；以及 @cycle/dom、@cycle/http 等驱动模块。
 
 这两个部分中，我个人认为**定义部分**较为重要。通过本文后面的分析，可以发现，从定义部分出发，模块部分的出现是非常合理的：官方模块提供了一些常用的 API 和副作用驱动，实现了不同 Cycle 应用都需要的共同功能，例如官方模块 @cycle/dom 提供了执行「更新 DOM 的副作用」的服务，而 @cycle/http 提供了执行 「HTTP 请求的副作用」的服务。
 
-Cycle 对于应用的抽象如下：应用函数（*main*） 是一个纯函数，其中输入（*sources*）是来自外部的读副作用，输出（*sinks*）是对外部的写副作用。在程序外部的所有 I/O 副作用都是由驱动（*drivers*）管理，比如处理 DOM 副作用和 HTTP 副作用。
+Cycle 对于应用的抽象如下：应用函数（_main_） 是一个纯函数，其中输入（_sources_）是来自外部的读副作用，输出（_sinks_）是对外部的写副作用。在程序外部的所有 I/O 副作用都是由驱动（_drivers_）管理，比如处理 DOM 副作用和 HTTP 副作用。
 
 ![cycle-nested-frontpage](imgs/cycle-nested-frontpage.svg)
 
@@ -32,7 +32,7 @@ interface NaiveSinks {
 
 #### Virtual DOM 的引入
 
-前面 DOM 字段对应的类型为 `Stream<Document>`，这意味着我们需要对 `window.document` 进行原地修改，然后在不同时刻将该对象 emit 出去，换句话说，我们需要手动维护真实 DOM。当页面复杂的时候，手动维护真实 DOM 既繁琐又容易出错，且副作用的引入以及对全局对象的依赖导致代码难以测试和理解。现在很多流行的框架（React、Vue）都引入了 Virtual DOM，Cycle 也一样，通过官方模块提供了 Virtual DOM。在引入了 @cycle/dom 模块之后，我们可以按照需求创建 DOM channel 的驱动，一般称创建的驱动为 `domDriver`。domDriver是一个函数，其接受一个虚拟文档对象（vdom）的流为参数，该函数的逻辑如下：每当 vdom 流 emit 一个 vdom 对象，该函数会负责调用相关 DOM API，将真实 DOM 修改为 此时 vdom 指定的状态。
+前面 DOM 字段对应的类型为 `Stream<Document>`，这意味着我们需要对 `window.document` 进行原地修改，然后在不同时刻将该对象 emit 出去，换句话说，我们需要手动维护真实 DOM。当页面复杂的时候，手动维护真实 DOM 既繁琐又容易出错，且副作用的引入以及对全局对象的依赖导致代码难以测试和理解。现在很多流行的框架（React、Vue）都引入了 Virtual DOM，Cycle 也一样，通过官方模块提供了 Virtual DOM。在引入了 @cycle/dom 模块之后，我们可以按照需求创建 DOM channel 的驱动，一般称创建的驱动为 `domDriver`。domDriver 是一个函数，其接受一个虚拟文档对象（vdom）的流为参数，该函数的逻辑如下：每当 vdom 流 emit 一个 vdom 对象，该函数会负责调用相关 DOM API，将真实 DOM 修改为 此时 vdom 指定的状态。
 
 引入 Virtual DOM 之后，应用可以避免陷入琐碎的 DOM 增删改查之中，而更专注于所要展现的内容本身。应用的任务从「生成真实 DOM 流」变为了「生成虚拟 DOM 流」。类似的，其他 channel 也需要有对应的驱动以执行副作用。一个 channel 的驱动往往是高度可复用的（例如 domDriver 的接口非常简单，但是通过该驱动，应用可以在页面上绘制任意的用户界面），大部分常见的 channel 的驱动已经有官方模块提供。
 
@@ -61,7 +61,7 @@ interface Sinks {
 
 ```typescript
 interface NaiveDOMDriver {
-    (vdom$: Stream<VNode>): Stream<Event>
+  (vdom$: Stream<VNode>): Stream<Event>
 }
 ```
 
@@ -71,14 +71,14 @@ interface NaiveDOMDriver {
 
 DOMDriver 采取了性能更优的事件流生成机制，该机制有下面两个特性：
 
-- lazy：事件流只在被需要的时候才进行构建；
-- queryable：该机制允许不同应用根据需求以查询的方式来获取相应的事件流。
+* lazy：事件流只在被需要的时候才进行构建；
+* queryable：该机制允许不同应用根据需求以查询的方式来获取相应的事件流。
 
 DOMDriver 并没有直接返回一个流对象，而是返回一个 DOMSource 对象。一个 DOMSource 可以代表「应用渲染得到的页面的一部分」
 
-- 调用 `domSource.elements()` 可以获取页面中 DOM 节点流
-- 调用 `domSource.events('click')` 可以获取该页面部分中点击事件流
-- `domSource.select('some-css-selector')` 表示执行 CSS 选择器以选取页面的部分子结点，该函数返回一个新的 DOMSource 对象，该对象代表了范围缩小之后的页面元素。
+* 调用 `domSource.elements()` 可以获取页面中 DOM 节点流
+* 调用 `domSource.events('click')` 可以获取该页面部分中点击事件流
+* `domSource.select('some-css-selector')` 表示执行 CSS 选择器以选取页面的部分子结点，该函数返回一个新的 DOMSource 对象，该对象代表了范围缩小之后的页面元素。
 
 应用获取到 DOMSource 之后，根据实际需求调用其 API 来获取所需要的事件流。至此，应用输入输出和 DOMDriver 相关接口类型定义如下：
 
@@ -98,7 +98,7 @@ interface DOMDriver {
 
 #### 从 run 函数的视角看应用与驱动
 
-从上面的类型定义可以看出，应用的 DOM channel 与 DOMDriver 恰好构成一个循环（*cycle*，这也是 Cycle.js 名字的由来），一方的输入恰好是对方的输出。而我们的框架核心，也就是 run 函数，代码大致如下：
+从上面的类型定义可以看出，应用的 DOM channel 与 DOMDriver 恰好构成一个循环（_cycle_，这也是 Cycle.js 名字的由来），一方的输入恰好是对方的输出。而我们的框架核心，也就是 run 函数，代码大致如下：
 
 ```typescript
 // 我们往往这样调用run函数
@@ -107,7 +107,7 @@ interface DOMDriver {
 function run(App, { DOM: domDriver }) {
   // 新建一个vnode代理，「假装」虚拟文档流已经获取
   const vnodeProxy$ = xs.create()
-  
+
   const domSource = domDriver(vnodeProxy$)
   const sinks = App({ DOM: domSource })
 
@@ -139,8 +139,12 @@ Souces 和 Sinks 是 Cycle 应用和驱动之间的接口，同时也是父组�
 ```typescript
 // CounterApp.tsx
 import xs, { Stream } from 'xstream'
-interface Sources { DOM: DOMSource }
-interface Sinks { DOM: Stream<VNode> }
+interface Sources {
+  DOM: DOMSource
+}
+interface Sinks {
+  DOM: Stream<VNode>
+}
 
 function CounterApp(sources: Sources): Sinks {
   const domSource = sources.DOM
@@ -152,19 +156,19 @@ function CounterApp(sources: Sources): Sinks {
   const change$ = xs.merge(dec$, inc$)
   const count$ = change$.fold((oldCount, delta) => oldCount + delta, 0)
 
-  const vdom$ = count$.map(count =>
+  const vdom$ = count$.map(count => (
     <div className="simple-counter">
       <button className="dec"> -1 </button>
       <p>Count: {count} </p>
       <button className="inc"> +1 </button>
     </div>
-  )
+  ))
 
   return { DOM: vdom$ }
 }
 ```
 
--------------------------------------------------
+---
 
 Cycle 的内容较少，本文前面的部分就已经介绍了 Cycle 的大部分内容。Cycle 只规定了应用的输入和输出格式，但并没有限定应用如何去管理状态和数据，开发者可以选择自己喜欢的方式来进行状态管理。下面的部分就讲讲我对 Cycle 状态管理的一些思考总结。
 
@@ -179,7 +183,7 @@ Cycle 的内容较少，本文前面的部分就已经介绍了 Cycle 的大部�
 * 状态存储：React 中用组件实例的 state 字段来记录该实例的内部状态，代码中使用 `this.state` 来获取状态；而 Redux 则用全局的 store 存放应用的全局状态，外部使用 `store.getState()` 方法来获取状态。
 * 生命周期管理：React 中状态的生命周期与组件实例生命周期一致，一个组件实例被创建时，一份组件状态会被初始化，一个组件实例被销毁时，一份组件状态也同时被销毁；Redux 中 store 是单例，store 在整个应用生命周期中存在且仅存在一个。
 * 状态变更方式：React 中我们往往手动调用 `setState` 来进行变更状态，且使用 `setState` 后会触发组件的 re-render；Redux 中我们需要将变更用 Action 对象封装（Action 对象一般来说是包含 type 字段的普通 JavaScript 对象，该对象也包含其他可选的字段用于描述应用所要进行的操作），然后在 reducer 中实现状态变更逻辑。
-* 作用域/状态传递：React 中组件实例的状态只对组件实例本身可见，状态也只能由组件实例调用 `this.setState` 来进行修改。组件实例也可以将状态以 props 的方法传递给子组件，而要让子组件也能修改组件实例的状态，需要将包含 `setState` 的回调函数传递给子组件。在Redux中，状态是全局状态，对整个应用都是可见的。
+* 作用域/状态传递：React 中组件实例的状态只对组件实例本身可见，状态也只能由组件实例调用 `this.setState` 来进行修改。组件实例也可以将状态以 props 的方法传递给子组件，而要让子组件也能修改组件实例的状态，需要将包含 `setState` 的回调函数传递给子组件。在 Redux 中，状态是全局状态，对整个应用都是可见的。
 
 在 React/Redux 中 `reactInstance.state` 或是 `store.getState()` 只能表达 **「某个时刻的状态」**，为了使得页面内容不断发生变化，这些状态对象也必须不断更新。React/Redux 对状态变更都是比较谨慎的：React 不推荐应用直接修改 state 对象，而 Redux 更是要求我们必须将修改操作封装为 Action 对象。
 
@@ -231,26 +235,26 @@ const vdom$ = count$.map(count => ... // LINE 5
 
 [轨迹查看器](http://shinima.pw/viewer/)对聚类前后的室内定位数据进行了可视化。这里我们关注轨迹查看器的**地图居中功能**，该居中功能大致如下：
 
-- 页面大小发生变化时，居中显示地图
-- 点击左上角的 *Centralize Map* 按钮，居中显示地图
-- 从右侧的 *Mobility Semantics Timeline* 中点击其他楼层的轨迹时，居中显示轨迹
-- 页面第一次打开时，居中显示地图，但不使用过渡动画（其他三种情况都使用过渡动画）
+* 页面大小发生变化时，居中显示地图
+* 点击左上角的 _Centralize Map_ 按钮，居中显示地图
+* 从右侧的 _Mobility Semantics Timeline_ 中点击其他楼层的轨迹时，居中显示轨迹
+* 页面第一次打开时，居中显示地图，但不使用过渡动画（其他三种情况都使用过渡动画）
 
 用回调函数的方式来实现上述功能是非常繁琐的，而在这里适当地应用响应式编程可以大大简化编码。这里我们从结果为导向来整理实现思路：
 
-1. 因为最后的效果是要对地图进行缩放，且还要指定是否使用 transition，根据 D3 的 API 文档，我们使用这样的一个对象来描述**「所期望的缩放行为」**： `{ useTransition: boolean; targetTransform: d3.ZoomTransform}`
+1.  因为最后的效果是要对地图进行缩放，且还要指定是否使用 transition，根据 D3 的 API 文档，我们使用这样的一个对象来描述**「所期望的缩放行为」**： `{ useTransition: boolean; targetTransform: d3.ZoomTransform}`
 
-2. 1. `useTransition` 比较容易计算，第一次加载地图该值为 false，其他时候均为 true
+2.  1.  `useTransition` 比较容易计算，第一次加载地图该值为 false，其他时候均为 true
 
-   2. `targetTransform` 可以通过 `viewBox` 和 `contentBox` 来计算得到。
+    2.  `targetTransform` 可以通过 `viewBox` 和 `contentBox` 来计算得到。
 
-   3. 1. `viewBox` 和居中对象无关，直接通过获取 SVG 元素的大小就可以计算得到。
-      2. `contentBox` 和居中的对象相关，居中地图时我们需要获取楼层地图的大小，而居中轨迹时，我们则需要根据具体的轨迹 ID 来获取对应的轨迹的外接矩形的大小。
+    3.  1.  `viewBox` 和居中对象无关，直接通过获取 SVG 元素的大小就可以计算得到。
+        2.  `contentBox` 和居中的对象相关，居中地图时我们需要获取楼层地图的大小，而居中轨迹时，我们则需要根据具体的轨迹 ID 来获取对应的轨迹的外接矩形的大小。
 
 整理好思路之后，我们还需要注意两点：
 
-1. 因为我们需要表示应用运行过程中「**所有的**地图居中和轨迹居中」，所以我们需要正确地用 Stream 容器将这些对象包装起来。
-2. 刚才的思路是「反过来」的，而具体代码是「正」的。
+1.  因为我们需要表示应用运行过程中「**所有的**地图居中和轨迹居中」，所以我们需要正确地用 Stream 容器将这些对象包装起来。
+2.  刚才的思路是「反过来」的，而具体代码是「正」的。
 
 具体代码大致如下：
 
@@ -274,20 +278,18 @@ const mapCentralizeInfo$ = xs
     const regionLayer = svg.selectAll('*[data-layer=region]').node()
     const contentBox = regionLayer.getBBox() // 此时楼层地图的大小
     return { useTransition, contentBox }
-})
+  })
 
 // 轨迹居中信息流
-const traceCentralizeInfo$ = traceToCentralize$
-  .compose(sampleCombine(svg$))
-  .map(([trace, svg]) => {
-    // 根据 traceIndex 来获取该轨迹的大小
-    const traceNode = svg.select(`*[data-trace-index="${traceIndex}"]`).node()
-    const contentBox = traceNode.getBBox()
-    return {
-      useTransition: true,
-      contentBox,
-    }
-  })
+const traceCentralizeInfo$ = traceToCentralize$.compose(sampleCombine(svg$)).map(([trace, svg]) => {
+  // 根据 traceIndex 来获取该轨迹的大小
+  const traceNode = svg.select(`*[data-trace-index="${traceIndex}"]`).node()
+  const contentBox = traceNode.getBBox()
+  return {
+    useTransition: true,
+    contentBox,
+  }
+})
 
 xs
   // 合并「地图居中信息流」和「轨迹居中信息流」
@@ -303,11 +305,11 @@ xs
       } else {
         zoom.transform(svg, targetTransform)
       }
-    }
+    },
   })
 ```
 
-上述代码中，我们通过组合已有的流（例如楼层地图的数据流，用户点击按钮的事件流等），使用不同的流操作符（map/mapTo/merge等），得到若干中间状态流（地图居中信息流和轨迹居中信息流），然后合并这些中间流并添加居中地图的监听器。每一个流的创建代码都包含了其所依赖的其他流，我们可以从流的创建代码中清晰地看到流之间的依赖关系。随着流的不断创建，代码的抽象级别也相应提高，到最后我们得到了这样一个流，通过该流可以方便地计算**「期望的缩放行为」**，恰好对应前面实现思路中的第一行。
+上述代码中，我们通过组合已有的流（例如楼层地图的数据流，用户点击按钮的事件流等），使用不同的流操作符（map/mapTo/merge 等），得到若干中间状态流（地图居中信息流和轨迹居中信息流），然后合并这些中间流并添加居中地图的监听器。每一个流的创建代码都包含了其所依赖的其他流，我们可以从流的创建代码中清晰地看到流之间的依赖关系。随着流的不断创建，代码的抽象级别也相应提高，到最后我们得到了这样一个流，通过该流可以方便地计算**「期望的缩放行为」**，恰好对应前面实现思路中的第一行。
 
 ## 总结与一些其他感想
 

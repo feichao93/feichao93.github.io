@@ -18,17 +18,15 @@ saga 又是一个让人困扰的单词 (・へ・)，这里给一个简单的说
 
 ## 0.3 关于 little-saga
 
-[little-saga](https://github.com/shinima/little-saga) 已经跑通了 redux-saga 的绝大部分测试（跳过了 little-saga 没有实现的那一部分测试），使用 `little-saga/compat` 已经可以替换 redux-saga，例如我的[坦克大战复刻版已经使用 little-saga 跑了起来](https://github.com/shinima/battle-city/commit/e15d8bd5b9994f9f1af61c0bc16b58461ec9c33a)。little-saga 已经发布在 NPM 上，欢迎大家下载。不过在日常开发时，我仍然推荐使用 redux-saga，redux-saga 经过时间的考验，对一些边界情况有着完善的处理。
+[little-saga](https://github.com/shinima/little-saga) 已经跑通了 redux-saga 的绝大部分测试（跳过了 little-saga 没有实现的那一部分测试），使用 `little-saga/compat` 已经可以替换 redux-saga，例如我上次写的坦克大战复刻版就已经[使用 little-saga 替换掉了 redux-saga](https://github.com/shinima/battle-city/commit/e15d8bd5b9994f9f1af61c0bc16b58461ec9c33a)。little-saga 已经发布在 NPM 上，欢迎大家下载使用。
 
-little-saga 并没有绑定 redux，所以有的时候（例如写网络爬虫、写游戏逻辑时）如果你并不想使用 redux，但仍想用 fork model 和 channel 来管理异步逻辑，可以尝试一下 little-saga。
+不过在日常开发中，我仍然推荐使用 redux-saga，redux-saga 经过时间的考验，对一些边界情况有着完善的处理。
 
-## 0.4(TODO) 关于作者
-
----
+little-saga 的特点是没有绑定 redux，所以有的时候（例如写网络爬虫、写游戏逻辑时）如果你并不想使用 redux，但仍想用 fork model 和 channel 来管理异步逻辑，可以尝试一下 little-saga。
 
 ## 1.1 生成器函数
 
-让我们先从 redux-saga 中最常见的 yield 语法开始。生成器函数使用 `function*` 声明，而 yield 语法只能出现在生成器函数中。在生成器执行过程中，遇到 yield 表达式立即暂停，后续可恢复执行状态。使用 redux-saga 时，我们所有的 effect 都是通过 yield 语法传递给 effect-runner 的，effect-runner 处理该 effect 并决定什么时候恢复生成器。InfoQ 上面的[深入浅出 ES6（三）：生成器 Generators](http://www.infoq.com/cn/articles/es6-in-depth-generators) 是一篇非常不错的文章，对生成器不了解的话，非常推荐阅读该文。
+让我们先从 redux-saga 中最常见的 yield 语法开始。生成器函数使用 `function*` 声明，而 yield 语法只能出现在生成器函数中。在生成器执行过程中，遇到 yield 表达式立即暂停，后续可恢复执行状态。使用 redux-saga 时，所有的 effect 都是通过 yield 语法传递给 effect-runner 的，effect-runner 处理该 effect 并决定什么时候恢复生成器。InfoQ 上面的[深入浅出 ES6（三）：生成器 Generators](http://www.infoq.com/cn/articles/es6-in-depth-generators) 是一篇非常不错的文章，对生成器不了解的话，非常推荐阅读该文。
 
 调用生成器函数我们可以得到一个迭代器对象（关于迭代器的文章推荐[深入浅出 ES6（二）：迭代器和 for-of 循环](http://www.infoq.com/cn/articles/es6-in-depth-iterators-and-the-for-of-loop)）。在比较简单的情况下，我们使用 for-of 循环来「消费」该迭代器，下面的代码就是一个简单的例子。
 
@@ -78,11 +76,11 @@ while (true) {
 // 输出 1, 2, 3, 4，然后抛出异常 '5 is bad input'
 ```
 
-然鹅，while-true 有一个致命缺陷：while-true 是同步的。这意味着生成器无法暂停执行直到某个异步任务（例如网络请求）完成，也就意味着无法使用 while-true 实现 redux-saga 了。
+然而，while-true 有一个致命缺陷：while-true 是同步的。这意味着生成器无法暂停执行直到某个异步任务（例如网络请求）完成，也就意味着无法使用 while-true 实现 redux-saga 了。
 
 ## 1.3 使用递归函数来消费迭代器
 
-effect-runner 的最终答案是：递归函数。递归函数满足了作为一个 effect-runner 的所有要求，不仅能够调用迭代器的 next/throw/return 方法，能在调用这些方法时使用指定地参数，还能同步或异步地调用它们。
+effect-runner 的最终答案是：递归函数。递归函数满足了作为一个 effect-runner 的所有要求，不仅能够调用迭代器的 next/throw/return 方法，能在调用这些方法时使用指定参数，还能同步或异步地调用它们。
 
 上一个例子中我们所有的代码都是同步的；而在下面的例子中，如果我们发现 value 是偶数的话，我们不马上调用 next，而是使用 setTimeout 延迟调用 next。
 
@@ -109,6 +107,8 @@ next()
 ```
 
 这个例子比较简单，只是对 value 进行奇偶判断。不过我们不难设想以下的使用方法：effect-producer 产生 promise，而 effect-runner 对 promise 的处理方式如下：当 promise resolve 的时候调用迭代器 的 next 方法，当 promise reject 的时候调用迭代器的 throw 方法。我们就可以用生成器的语法实现 async/await，这也是生成器比 async/await 更加强大的原因。而 redux-saga/little-saga 不仅实现了对 promise 的处理，还实现了功能更为强大的 fork model。
+
+在本文后面，我们称该递归函数为「驱动函数」。注意不要将驱动函数 next 和迭代器的 next 方法搞混，迭代器的 next 方法被调用的形式是 `iterator.next(someValue)`，而 next 方法被调用的形式是 `next(arg, isErr)`。在 redux-saga/little-saga，函数名字为 `next` 的情况只有驱动函数和迭代器 next 方法这两种，所以如果发现一个叫做 `next` 的函数，且该函数不是迭代器方法，那么该函数就是驱动函数。
 
 ## 1.4 双向通信
 
@@ -139,26 +139,24 @@ const iterator = range2(1, 10)
 
 function next(arg, isErr) {
   // 注意驱动函数多了参数 arg 和 isErr
-  // 这里我们将 arg 作为参数传递给 iterator.next，作为 effect-producer 中 yield 语句的返回值
   let result
   if (isErr) {
     result = iterator.throw(arg)
   } else {
+    // 这里我们将 arg 作为参数传递给 iterator.next，作为 effect-producer 中 yield 语句的返回值
     result = iterator.next(arg)
   }
-  if (result.done) {
+  const { done, value } = result
+  if (done) {
     return
   }
-  console.log('getting:', result.value)
-  if (result.value === 5) {
+  console.log('getting:', value)
+  if (value === 5) {
     // 将 isErr 置为 true，就能用递归的方式调用 iterator.throw 方法
     next(new Error('5 is bad input'), true)
-  } else if (result.value % 2 === 0) {
-    // 如果是偶数的话，延迟调用 next 方法
-    setTimeout(() => next(result.value * 2), result.value * 1000)
   } else {
-    // 「响应」是「请求」的两倍
-    next(result.value * 2)
+    // 延迟调用驱动函数；「响应」是「请求」的两倍
+    setTimeout(() => next(value * 2), value * 1000)
   }
 }
 next()
@@ -175,14 +173,14 @@ next()
 // getting: 5
 // Uncaught Error: 5 is bad input
 
-// 输出 getting: x  (x 为偶数) 之后，输出会暂停一段时候
+// 输出 getting: x 之后，输出会暂停一段时候
 ```
 
 ## 1.5 effect 的类型与含义
 
 前面的例子中我们的 effect-producer 都是简单的 range，effect（即被 yield 的值）为数字。因为数字没有什么确切的含义，effect-runner 只是简单地打印这些数字，然后再在合适地时刻调用驱动函数。
 
-如果 effect 有明确的含义，effect-runner 就可以根据其含义来决定具体的执行逻辑。redux-saga 可以处理 promise、iterator、take、put 等类型的 effect，合理地组合不同类型的 effect 可以表达非常复杂的异步逻辑（例如 [坦克大战](https://zhuanlan.zhihu.com/p/35551654) 的游戏逻辑）。下面我们给 little-saga 加上一些简单的 effect 的处理能力，是不是觉得这个和 [co](https://github.com/tj/co) 很像呢？
+如果 effect 有明确的含义，effect-runner 就可以根据其含义来决定具体的执行逻辑。redux-saga 可以处理 promise、iterator、take、put 等类型的 effect，合理地组合不同类型的 effect 可以表达非常复杂的异步逻辑。下面我们给 little-saga 加上一些简单的 effect 的处理能力，是不是觉得这个和 [co](https://github.com/tj/co) 很像呢？
 
 ```javascript
 function* gen() {
@@ -402,7 +400,7 @@ function proc(iterator, parentContext, cont) {
 
 ## 2.1 Task
 
-[proc 函数](https://github.com/redux-saga/redux-saga/blob/v1.0.0-beta.1/packages/core/src/internal/proc.js#L173) 用于运行一个迭代器，并返回一个 Task 对象。Task 对象描述了该迭代器的运行状态，我们首先来看看 Task 的接口（使用 TypeScript 来表示类型信息）。在 little-saga 中，我们将使用**类似**的 Task 接口。（注意是类似的接口，而不是相同的接口）
+proc 函数（[redux-saga 的源码](https://github.com/redux-saga/redux-saga/blob/v1.0.0-beta.1/packages/core/src/internal/proc.js#L173)）用于运行一个迭代器，并返回一个 Task 对象。Task 对象描述了该迭代器的运行状态，我们首先来看看 Task 的接口（使用 TypeScript 来表示类型信息）。在 little-saga 中，我们将使用**类似**的 Task 接口。（注意是类似的接口，而不是相同的接口）
 
 ```typescript
 type Callback = (result: any, isErr: boolean) => void
@@ -435,7 +433,7 @@ redux-saga 提供了 fork effect 来进行非阻塞调用，`yield fork(...)` �
 
 ![saga-tree-of-running-battle-city](saga-tree-of-running-battle-city.jpg)
 
-redux-saga 的文档也[对 fork model 进行了详细的说明](https://redux-saga.js.org/docs/advanced/ForkModel.html)，下面我做一点简单的翻译：
+redux-saga 的文档也对 fork model [进行了详细的说明](https://redux-saga.js.org/docs/advanced/ForkModel.html)，下面我做一点简单的翻译：
 
 * 完成：一个 saga 实例在满足以下条件之后进入完成状态:
 
@@ -588,7 +586,7 @@ function runDefEffect([_, name, handler], ctx, cb) {
 // def 定义在其他文件
 function def(ctx, type, handler) {
   const old = ctx.translator
-  // 替换 ctx.translator，不过这并不是一个高效的做法
+  // 替换 ctx.translator
   ctx.translator = {
     getRunner(effect) {
       return effect[0] === type ? handler : old.getRunner(effect)
@@ -597,21 +595,63 @@ function def(ctx, type, handler) {
 }
 ```
 
-## 2.6 (todo) proc / Task / MainTask 的完整实现
+## 2.6 little-saga 核心部分的完整实现
 
-little-saga 的 proc 完整版本在[该文件中](https://github.com/shinima/little-saga/blob/master/src/core/proc.js)。proc 完整实现的代码较长，相比于 1.9 中的初步实现，添加了 context、task、fork model、effect 类型拓展等功能。proc 完整实现中添加了大量的字段来记录 task 与 mainTask 的运行状态，同时完善了其生命周期（启动/完成/出错/取消）。
+little-saga 核心部分的实现代码位于 [/src/core](https://github.com/shinima/little-saga/tree/master/src/core) 文件夹内。完整实现的代码较多，相比于 _1.9 proc 初步实现_，完整实现添加了 context、task、fork model、effect 类型拓展、错误处理等功能，完善了 Task 生命周期（启动/完成/出错/取消）。
+
+redux-saga 对应的实现代码全部都位于 proc.js 一个文件中，导致该文件很大；而 little-saga 则是将实现分成了若干个文件，下面我们一个一个来进行分析。
+
+### 2.6.1 整体思路
+
+在 2.6 后面的内容中，我们将使用以下的代码作为例子。该例子中，Parent 会 fork Child1 和 Child2，分别需要 100ms 和 300ms 来完成。Parent 迭代器本身的代码（mainTask）需要 200ms 完成。而整个 Parent Task 则需要 300ms 才能完成。
+
+```javascript
+function* Parent() {
+  const Child1 = yield fork(api.xxxx) // LINE-1 需要 100ms 才能完成
+  const Child2 = yield fork(api.yyyy) // LINE-2 需要 300ms 才能完成
+  yield delay(200) // LINE-3 需要 200 ms 才能完成
+}
+```
+
+下图展示了 Parent 运行时，各个 Task / mainTask / ForkQueue 之间的相互关系。图中的实线箭头表示两个对象之间的后继关系（cont）：「A 指向 B」意味着「当 A 完成时，需要将结果传递给 B」。
+
+在 _1.7 cancellation_ 中我们知道 cancellation 的顺序和 cont 恰好是相反的，在具体代码实现时，我们不仅需要构建下图中的 cont 关系，还需要构建反向的 cancellation 关系。
+
+![cont-graph](cont-graph.jpg)
+
+本小节中的代码比较复杂，如果觉得理解起来比较困难的话，可以和 _2.7 Task 状态举例_ 中的例子对照着看。
+
+### 2.6.2 函数 `proc`
+
+函数 proc 是运行 saga 实例的入口函数。结合上图，函数 proc 的作用是创建图中各个 Task/mainTask 对象，并建立对象之间的后继关系（cont）和取消关系（cancellation）。代码如下：
 
 ```javascript
 // /src/core/proc.js
 function proc(iterator, parentContext, cont) {
   // 初始化当前 task 的 context
   const ctx = Object.create(parentContext)
-  // Task 和 MainTask 的实现见下方
-  // mainTask 用来跟踪当前迭代器的语句执行状态
-  const mainTask = new MainTask(next)
-  // 创建当前 saga 实例的 task 对象
-  const task = new Task(cont, mainTask)
 
+  // mainTask 用来跟踪当前迭代器的语句执行状态
+  const mainTask = {
+    // cont: **will be set when passed to ForkQueue**
+    isRunning: true,
+    isCancelled: false,
+    cancel() {
+      if (mainTask.isRunning && !mainTask.isCancelled) {
+        mainTask.isCancelled = true
+        next(TASK_CANCEL)
+      }
+    },
+  }
+
+  // 创建 ForkQueue 对象和 Task 对象，这两个类的代码在后面会写出来
+  const taskQueue = new ForkQueue(mainTask)
+  const task = new Task(taskQueue)
+  // 设置后继关系
+  taskQueue.cont = task.end
+  task.cont = cont
+
+  // 设置取消关系
   cont.cancel = task.cancel
   next()
 
@@ -619,6 +659,9 @@ function proc(iterator, parentContext, cont) {
 
   // 以下代码均为函数定义
 
+  // 在图中驱动函数只和 mainTask 有联系
+  // 然后我们也可以发现下面 next 函数的代码中，也只调用了 mainTask 的接口
+  // 即 next 函数中的代码不会引用 task 和 taskQueue 对象
   function next(arg, isErr) {
     console.assert(mainTask.isRunning, 'Trying to resume an already finished generator')
 
@@ -628,7 +671,8 @@ function proc(iterator, parentContext, cont) {
         result = iterator.throw(arg)
       } else if (arg === TASK_CANCEL) {
         mainTask.isCancelled = true
-        next.cancel()
+        next.cancel() // 取消当前执行的 effect
+        // 跳转到迭代器的 finally block，执行清理逻辑
         result = iterator.return(TASK_CANCEL)
       } else {
         result = iterator.next(arg)
@@ -642,144 +686,58 @@ function proc(iterator, parentContext, cont) {
       }
     } catch (error) {
       if (!mainTask.isRunning) {
+        // ???? TODO 这一行代码什么意思 我给忘了 参照 LINE-A?
         throw error
       }
       if (mainTask.isCancelled) {
+        // 在执行 cancel 逻辑时发生错误，在 3.4 其他问题与细节 中说明
         console.error(error)
       }
       mainTask.isRunning = false
-      mainTask.cont(error, true)
+      mainTask.cont(error, true) // LINE-A
     }
   }
 
-  function digestEffect(rawEffect, cb) {
-    /* ...... */
-  }
+  // function digestEffect(rawEffect, cb) { /* ...... */ }
+  // function runEffect(effect, currCb) { /* ...... */ }
 
-  function runEffect(effect, currCb) {
-    const effectType = effect[0]
-    if (effectType === 'promise') {
-      resolvePromise(effect, ctx, currCb)
-    } else if (effectType === 'iterator') {
-      resolveIterator(effect, ctx, currCb)
-    } else if (effectType === 'fork') {
-      runForkEffect(effect, ctx, currCb)
-    } else if (effectType === 'spawn') {
-      runSpawnEffect(effect, ctx, currCb)
-    } else if (effectType === 'join') {
-      runJoinEffect(effect, ctx, currCb)
-    } else if (effectType === 'cancel') {
-      runCancelEffect(effect, ctx, currCb)
-    } else if (effectType === 'cancelled') {
-      runCancelledEffect(effect, ctx, currCb)
-    } else if (effectType === 'def') {
-      runDefEffect(effect, ctx, currCb)
-    } else {
-      const effectRunner = ctx.translator.getRunner(effect)
-      if (effectRunner == null) {
-        const error = new Error(`Cannot resolve effect-runner for type: ${effectType}`)
-        error.effect = effect
-        currCb(error, true)
-      } else {
-        effectRunner(effect, ctx, currCb, { digestEffect })
-      }
-    }
-  }
+  // function resolvePromise([effectType, promise], ctx, cb) { /* ... */ }
+  // function resolveIterator([effectType, iterator], ctx, cb) { /* ... */ }
+  // ...... 各种内置类型的 effect-runner
 
-  function resolvePromise([effectType, promise], ctx, cb) {
-    const cancelPromise = promise[CANCEL]
-    if (is.func(cancelPromise)) {
-      cb.cancel = cancelPromise
-    }
-    promise.then(cb, error => cb(error, true))
-  }
-
-  function resolveIterator([effectType, iterator], ctx, cb) {
-    proc(iterator, ctx, cb)
-  }
-
-  function runForkEffect([effectType, fn, ...args], ctx, cb) {
-    const iterator = createTaskIterator(fn, args)
-    try {
-      suspend()
-      const subTask = proc(iterator, ctx, noop)
-      if (subTask.isRunning) {
-        task.taskQueue.addTask(subTask)
-        cb(subTask)
-      } else if (subTask.error) {
-        task.taskQueue.abort(subTask.error)
-      } else {
-        cb(subTask)
-      }
-    } finally {
-      flush()
-    }
-  }
-
-  function runSpawnEffect([effectType, fn, ...args], ctx, cb) {
-    const iterator = createTaskIterator(fn, args)
-    try {
-      suspend()
-      cb(proc(iterator, ctx, noop))
-    } finally {
-      flush()
-    }
-  }
-
-  function runJoinEffect([effectType, otherTask], ctx, cb) {
-    if (otherTask.isRunning) {
-      const joiner = { task, cb }
-      cb.cancel = () => remove(otherTask.joiners, joiner)
-      otherTask.joiners.push(joiner)
-    } else {
-      if (otherTask.isAborted) {
-        cb(otherTask.error, true)
-      } else {
-        cb(otherTask.result)
-      }
-    }
-  }
-
-  function runCancelEffect([effectType, cancelling = task], ctx, cb) {
-    if (cancelling.isRunning) {
-      cancelling.cancel()
-    }
-    cb()
-  }
-
-  function runCancelledEffect(effect, ctx, cb) {
-    cb(Boolean(mainTask.isCancelled))
-  }
-
-  function runDefEffect([_, name, handler], ctx, cb) {
-    def(ctx, name, handler)
-    cb()
-  }
+  // fork-model 中新增了 fork/spawn/join/cancel/cancelled
+  // 这五种类型的 effec-runner 代码见下方
 }
 ```
+
+### 2.6.3 fork-model 相关的 effect-runner
+
+函数 `runForkEffect` 用来执行 fork 类型的 effect，并向调用者返回一个 subTask 对象。该函数需要注意的是，有的时候调用者会使用 fork 来执行一些同步的任务，所以调用 `proc(iterator, ctx, noop)` 可能会返回一个已经完成或是已经发生错误的 subTask，此时我们不需要将 subTask 放入 fork-queue 中，而是需要执行其他操作。
 
 ```javascript
-// /src/core/MainTask.js
-class MainTask {
-  // cont will be set when passed to ForkQueue
-  cont = null
-
-  isRunning = true
-  isCancelled = false
-
-  constructor(next) {
-    // 这里的 next 就是 next 递归函数
-    this.next = next
-  }
-
-  cancel = () => {
-    if (this.isRunning && !this.isCancelled) {
-      this.isCancelled = true
-      this.next(TASK_CANCEL)
+// /src/core/proc.js
+function runForkEffect([effectType, fn, ...args], ctx, cb) {
+  const iterator = createTaskIterator(fn, args)
+  try {
+    suspend() // 见 3.4 scheduler
+    const subTask = proc(iterator, ctx, noop)
+    if (subTask.isRunning) {
+      task.taskQueue.addTask(subTask)
+      cb(subTask)
+    } else if (subTask.error) {
+      task.taskQueue.abort(subTask.error)
+    } else {
+      cb(subTask)
     }
+  } finally {
+    flush() // 见 3.4 scheduler
   }
 }
 ```
+
+剩下四个类型（spawn / join / cancel / cancelled）的 effect-runner 比较简单，这里就不再进行介绍。
+
+### 2.6.4 类 `Task`
 
 ```javascript
 // /src/core/Task.js
@@ -791,32 +749,36 @@ class Task {
   error = undefined
   joiners = []
 
-  _deferredEnd = null
+  // cont will be set after calling constructor()
+  cont = undefined
 
-  constructor(cont, mainTask) {
-    this.cont = cont
-    this.taskQueue = new ForkQueue(mainTask, this.end)
+  constructor(taskQueue) {
+    this.taskQueue = taskQueue
   }
 
-  // (todo) cancel是什么含义？一般会在什么情况下被调用？
+  // 调用 cancel 函数来取消该 Task，这将取消所有当前正在执行的 child-task 和 mainTask
+  // cancellation 会向下传播，意味着该 Task 对应的 saga-tree 子树都将会被取消
+  // 同时 cancellation 也会传递给该 Task 的所有 joiners
   cancel = () => {
+    // 如果该 Task 已经完成或是已经被取消，则跳过
     if (this.isRunning && !this.isCancelled) {
       this.isCancelled = true
       this.taskQueue.cancelAll()
+      // 将 TASK_CANCEL 传递给所有 joiners
       this.end(TASK_CANCEL)
     }
   }
 
-  // (todo) end是什么含义？一般会在什么情况下被调用？
+  // 结束当前 Task
+  // 设置 Task 的 result/error，然后调用 task.cont，最后将结果传递给 joiners
+  // 当该 Task 的 child-task 和 mainTask 都完成时（即 fork-queue 完成时），该函数将被调用
   end = (result, isErr) => {
     this.isRunning = false
     if (!isErr) {
       this.result = result
-      this._deferredEnd && this._deferredEnd.resolve(result)
     } else {
       this.error = result
       this.isAborted = true
-      this._deferredEnd && this._deferredEnd.reject(result)
     }
 
     this.cont(result, isErr)
@@ -825,90 +787,85 @@ class Task {
   }
 
   toPromise() {
-    if (this._deferredEnd) {
-      return this._deferredEnd.promise
-    }
-
-    const def = deferred()
-    this._deferredEnd = def
-
-    if (!this.isRunning) {
-      if (this.isAborted) {
-        def.reject(this.error)
-      } else {
-        def.resolve(this.result)
-      }
-    }
-    return def.promise
+    // 获取 task 对应的 promise 对象，这里省略了代码
   }
 }
 ```
 
-## 2.7 (todo) 图解 proc
+### 2.6.5 小节
 
-proc 是一个复杂的函数，我画了一些图来更好地理解它。
+这一节中代码较多，而且代码的逻辑密度很高。想要完全理解 little-saga 的实现思路，还是需要仔细阅读源代码才行。
 
-(todo) 我是图 我是图 我是图
-
-## 2.8 (todo) 类 `Env`
-
-little-saga 的核心部分已经在前面全部实现。函数 `env` 的作用是在运行 rootSaga 之前，对 cont 和 ctx 进行配置。
+## 2.7 (todo) Task 状态举例
 
 ```javascript
-const emptyTranslator = {
-  getRunner() {
-    return null
-  },
+function* Parent() {
+  const Child1 = yield fork(api.xxxx) // LINE-1 需要 100ms 才能完成
+  const Child2 = yield fork(api.yyyy) // LINE-2 需要 300ms 才能完成
+  yield delay(200) // LINE-3 需要 200 ms 才能完成
 }
+```
 
-function fallbackCont(result, isErr) {
-  if (isErr) {
-    console.error('fallbackCont error:', result)
-  } else {
-    console.log('fallbackCont result:', result)
+(todo) 画一些图说明在不同时刻 Parent/Child1/Child2 的状态，画出 mainTask.isRunning task.isRunning 等重要字段。如果能够画出一个随着时间而变化的动图就更好了。
+
+* t=0 时，Parent 开始运行
+* LINE-1 执行完成时 ...
+* LINE-2 执行完成时 ...
+* LINE-3 执行开始时 ...
+* t=100 时，Child1 执行完成，此时 ...
+* t=200 时，delay(200) 执行完成，此时 ...
+* t=300 时，Child2 执行完成，此时 ...
+
+## 2.8 类 `Env`
+
+类 `Env` 的作用是在运行 rootSaga 之前，对 root Task 的运行环境进行配置。
+
+```javascript
+// /src/core/Env.js
+class Env {
+  // fallbackCont 的行为是：在完成时打印结果，在出错时抛出异常
+  constructor(cont = fallbackCont) {
+    this.cont = cont
+    // emptyTranslator 永远返回 null，表示默认情况下 effect 拓展类型为空
+    this.ctx = { translator: emptyTranslator }
   }
-}
 
-export default function env(cont = fallbackCont) {
-  const ctx = { translator: emptyTranslator }
+  use(enhancer) {
+    enhancer(this.ctx)
+    return this
+  }
 
-  return {
-    use(enhancer) {
-      enhancer(ctx)
-      return this
-    },
-    def(type, handler) {
-      def(ctx, type, handler)
-      return this
-    },
-    run(fn, ...args) {
-      const iterator = createTaskIterator(fn, args)
-      return proc(iterator, ctx, cont)
-    },
+  def(type, handler) {
+    def(this.ctx, type, handler)
+    return this
+  }
+
+  run(fn, ...args) {
+    const iterator = createTaskIterator(fn, args)
+    return proc(iterator, this.ctx, this.cont)
   }
 }
 ```
 
-我们可以利用函数 env 来预先添加一些常见的 effect 类型，例如 delay/all/race/takeEvery/takeLatest 等，这样后续所有的 saga 函数都可以直接使用这些 effect 类型。下面的代码在运行 rootSaga 之前定义了 delay 和 echo 两种 effect。
+我们可以利用 Env 来预先添加一些常见的 effect 类型，例如 all/race/take/put 等，这样后续所有的 saga 函数都可以直接使用这些 effect 类型。例如下面的代码在运行 rootSaga 之前定义了 delay 和 echo 两种 effect。
 
 ```javascript
-env()
+new Env()
   .def('delay', ([_, timeout], _ctx, cb) => setTimeout(cb, timeout))
   .def('echo', ([_, arg], _ctx, cb) => cb(arg))
   .run(rootSaga)
 
 function* rootSaga() {
   yield ['delay', 500] // 500ms之后 yield 才会返回
-  const echoResult = yield ['echo', 'hello']
-  console.assert(echoResult === 'hello')
+  yield ['echo', 'hello'] // yield 返回字符串 'hello'
 }
 ```
 
-## 3.1 race/all effect
+## 3.1 commonEffects 拓展
 
-有了 def effect，拓展 effect 就简单多了。redux-saga 中 [runAllEffect](https://github.com/redux-saga/redux-saga/blob/v1.0.0-beta.1/packages/core/src/internal/proc.js#L616) 用于运行 all 类型的 effect，我们拷贝该代码，并简单修改，使其符合 effectRunner 接口，即可在 little-saga 中实现 all effect。
+all-effect 的行为与 Promise#all 非常类似：all-effect 在构造时接受一些 effects 作为 sub-effects，当所有 sub-effects 完成时，all-effect 才算完成；当其中之一 sub-effect 抛出错误时，all-effect 会立即抛出错误。
 
-all-effect 的行为与 Promise#all 非常类似：当所有 sub-effects 完成时，all-effect 才算完成；当其中之一 sub-effect 抛出错误时，all-effect 会立即抛出错误。我们用变量 completedCount 用来记录 sub-effect 完成的数量，当一个 sub-effect 完成时，将完成数量加一，然后检查是否完成了所有 sub-effects。如果所有的 sub-effects 都完成了，我们调用 cb 来完成整个 all-effect。当一个 sub-effect 发生错误时，我们也立刻调用 cb 来结束 all-effect。little-sage 中实现 all effect 的代码如下：
+有了 def effect，拓展 effect 就简单多了。redux-saga 中 [runAllEffect](https://github.com/redux-saga/redux-saga/blob/v1.0.0-beta.1/packages/core/src/internal/proc.js#L616) 用于运行 all 类型的 effect，我们拷贝该代码，并简单修改，使其符合 effectRunner 接口，即可在 little-saga 中实现 all effect。little-sage 中实现 all effect 的代码如下：
 
 ```javascript
 function all([_, effects], ctx, cb, { digestEffect }) {
@@ -919,12 +876,14 @@ function all([_, effects], ctx, cb, { digestEffect }) {
     return
   }
 
+  // 变量 completedCount 用来记录 sub-effect 完成的数量
   let completedCount = 0
   let completed = false
   const results = {}
   const childCbs = {}
 
   function checkEffectEnd() {
+    // 如果所有的 sub-effects 都完成了，则调用 cb 来完成整个 all-effect
     if (completedCount === keys.length) {
       completed = true
       cb(is.array(effects) ? Array.from({ ...results, length: keys.length }) : results)
@@ -937,11 +896,14 @@ function all([_, effects], ctx, cb, { digestEffect }) {
         return
       }
       if (isErr || res === TASK_CANCEL) {
+        // 其中一个 sub-effect 发生错误时，立刻调用 cb 来结束 all-effect
         cb.cancel()
         cb(res, isErr)
       } else {
         results[key] = res
+        // 一个 sub-effect 完成时，将完成数量加一
         completedCount++
+        // 并检查是否完成了所有 sub-effects
         checkEffectEnd()
       }
     }
@@ -960,18 +922,125 @@ function all([_, effects], ctx, cb, { digestEffect }) {
 }
 ```
 
-race 和其他一些常见的 effect 也是通过相同的方式实现的，具体可以看 [little-saga 的源代码](https://github.com/shinima/little-saga/blob/master/src/commonEffects/)。
+race 和其他一些常见的 effect 也是通过相同的方式实现的。`little-saga/commonEffects` 提供了 7 种来自 redux-saga 的常用类型拓展，包括：all / race / apply / call / cps / getContext / setContext。当我们想要在代码中使用这些类型时，我们可以使用 Env 来加载 commonEffects：
 
-## 3.2 channel 与 take/put effect
+```javascript
+import { Env, io } from 'little-saga'
+import commonEffects from 'little-saga/commonEffects'
 
-## 3.3 (todo)scheduler
+// 调用 use(commonEffects) 之后，就能在代码中使用 commonEffects 提供的拓展类型了
+new Env().use(commonEffects).run(function* rootSaga() {
+  yield io.race({
+    foo: io.cps(someFunction),
+    foo: io.call(someAPI),
+  })
+})
+```
 
-防止 dispatch another action when dispatching action
+## 3.2 channelEffects 拓展
 
-https://github.com/reduxjs/redux/blob/v4.0.0/src/createStore.js#L180
+`little-saga/channelEffects` 提供了 5 种和 channel 相关的类型拓展（take / takeMaybe / put / actionChannel / flush），并从 redux-saga 拷贝了 channel / buffers 的代码。
 
-## 3.4 其他问题与细节
+`env.use(channelEffects)` 不仅会添加类型拓展，还会在 ctx.channel 上设置一个默认 channel。当使用 put/take effect 时，如果没有指定 channel 参数，则默认使用 ctx.channel。
 
-「执行 cancel 逻辑时发生错误」的问题
+使用 little-saga 中的 channel，可以实现任意两个 Task 之间的通信。不过 channel 又是一个很大的话题，本文就不再详细介绍了。channel 的相关源码的可读性还是相当不错的，欢迎直接[阅读源码](https://github.com/shinima/little-saga/tree/master/src/channelEffects)。
 
-调用 task.toPromise 之后，task 的错误传播问题
+## 3.3 compat 拓展
+
+compat 拓展使得 little-saga 可以和 redux 进行集成，并提供与 redux-saga 一致的 API。不过 little-saga 因为 normalizedEffect 的关系，无法和其他 redux 中间件（例如 redux-thunk）共存，最终是无法完全兼容 redux-saga API 的。
+
+little-saga 的 `createSagaMiddleware` 也是比较有意思的一个函数，其实现思路如下：首先使用 channelEffects 添加 channel 相关拓展；然后用 store.dispatch 替换掉 ctx.channel.put，这样一来 put effect 会转换为对 dispatch 函数的调用；另一方面，`createSagaMiddleware` 返回一个 redux 中间件，该中间件会将所有的 action（回想一下，redux 中 action 只能来自于 dispatch）put 回原来的 channel 中，这样所有 action 又能够重新被 take 到了；当然，中间件也使用了 getState 来实现 select effect。代码如下：
+
+```javascript
+function createSagaMiddleware(cont) {
+  function middleware({ dispatch, getState }) {
+    let channelPut
+    const env = new Env(cont)
+      .use(commonEffects)
+      .use(channelEffects)
+      .use(ctx => {
+        // 记录「真实」的 channel.put
+        channelPut = ctx.channel.put
+
+        // 使用 dispatch 替换掉 channel 上的 put 方法
+        ctx.channel.put = action => {
+          action[SAGA_ACTION] = true
+          dispatch(action)
+        }
+
+        // 使用 def 方法来定义 select 类型的 effect-runner
+        def(ctx, 'select', ([_effectType, selector = identity, ...args], _ctx, cb) =>
+          cb(selector(getState(), ...args)),
+        )
+      })
+
+    // 当 middleware 函数执行时，说明 store 正在创建
+    // 此时我们给 middleware.run 设置正确的函数
+    middleware.run = (...args) => env.run(...args)
+
+    return next => action => {
+      const result = next(action) // hit reducers
+      // 下面的 if-else 主要是为了保证 channelPut(action) 恰好被包裹在一层 asap 中
+      // asap 的介绍见 3.4
+      if (action[SAGA_ACTION]) {
+        // SAGA_ACTION 字段为 true 表示该 action 来自 saga
+        // 而在 saga 中，我们在 put 的时候已经使用了函数asap
+        // 所以在这里就不需要再次调用 asap 了
+        channelPut(action)
+      } else {
+        // 表示该 action 来自 store.dispatch
+        // 例如某个 React 组件的 onClick 中调用了 dispatch 方法
+        asap(() => channelPut(action))
+      }
+      return result
+    }
+  }
+
+  middleware.run = (...args) => {
+    throw new Error('运行 Saga 函数之前，必须使用 applyMiddleware 将 Saga 中间件加载到 Store 中')
+  }
+
+  return middleware
+}
+```
+
+## 3.4 scheduler
+
+asap / suspend / flush 是来自于 scheduler.js 的方法。asap 被用在 put effect 中，而后面两个函数被用在 fork/spawn effect 中。
+
+scheduler 主要是处理 「嵌套 put」问题。考虑下面的代码，rootSaga 会 fork genA 和 genB，genA 会先 put-A 然后 take-B，而 genB 会先 take-A 然后 put-B。
+
+```javascript
+function* rootSaga() {
+  yield fork(genA) // LINE-1
+  yield fork(genB) // LINE-2
+}
+
+function* genA() {
+  yield put({ type: 'A' })
+  yield take('B')
+}
+
+function* genB() {
+  yield take('A')
+  yield put({ type: 'B' })
+}
+```
+
+在**使用** scheduler 的情况下，这两次 take 都是可以成功的，即 genA 可以 take 到 B，而 genB 可以 take 到 A，这也是所我们期望的情况。
+
+假设在**不使用** scheduler 的情况下，put-A 唤醒了 take-A。因为 put/take 的执行都是同步的，所以 take-A 被唤醒之后执行的下一句是 genB 中的 put-B，而此时 genA 还处于执行 put-A 的状态，genA 将丢失 B。也就是说在**不使用** scheduler 的情况下，嵌套的 put 很有可能导致部分 action 的丢失。
+
+使用函数 asap 包裹 put 的过程，可以保证「内层的 put」延迟到「外层的 put 执行结束时」才开始执行，杜绝嵌套 put 的发生。asap 是 as soon as possible 的缩写，`asap(fn)` 的意思可以理解为「当外层的 asap 任务都执行完之后，尽可能快地执行 fn」。
+
+我们再考虑上面代码中的 LINE-1 和 LINE-2，在**不使用** scheduler 的情况下，这两行代码的前后顺序会影响运行结果：因为默认 channel 用的是 multicastChannel，multicastChannel 没有缓存（buffer），所以为了能够成功 take-A，take-A 必须在 put-A 之前就开始执行。
+
+使用函数 suspend/flush 包裹 fork/spawn 的过程，可以保证「fork/spawn 中的同步 put」延迟到「fork/spawn 执行结束时」才开始执行。这样一来，take-A 总是能比 put-B 先执行，LINE-1 和 LINE-2 的前后顺序就不会影响运行结果了。
+
+## 3.5 其他细节问题
+
+这一个小节列举了一些 redux-saga/little-saga 中仍存在的一些细节问题，不过这些问题在平时编程中较为少见，影响也不大。
+
+Task 的「取消」和「完成」是互斥的。Task 被取消时代码会直接跳转进入 finally 语句块，但此时仍有可能发生错误，即发生了「执行 cancel 逻辑时发生错误」的现象。此时 Task 的状态已经为「被取消」，我们不能将 task 的状态修改为「完成（出错）」。对于这类错误，little-saga 只是简单地使用 console.error 进行了打印，并没有较为优雅的处理方式。所以我们在使用 redux-saga/little-saga 写代码的时候，尽量避免过于复杂的 cancel 逻辑，以防在 cancel 逻辑中发生错误。
+
+当一个往 channel 中 put 一个 END 的时候，正在 take 该 channel 的该怎么办？[redux-saga 中的处理比较奇怪](https://github.com/redux-saga/redux-saga/blob/v1.0.0-beta.1/packages/core/src/internal/proc.js#L301-L303)，我询问了一下作者，他表示这是一个用在服务端渲染的 hack。而 little-saga 中做了简化，如果 take 得到了 END，那么就将 END 看作是 TASK_CANCEL。

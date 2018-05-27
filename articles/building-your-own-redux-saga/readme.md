@@ -2,6 +2,34 @@
 
 知乎上已经有不少介绍 redux-saga 的好文章了，例如 [redux-saga 实践总结](https://zhuanlan.zhihu.com/p/23012870)、[浅析 redux-saga 实现原理](https://zhuanlan.zhihu.com/p/30098155)、[Redux-Saga 漫谈](https://zhuanlan.zhihu.com/p/35437092)。本文将介绍 redux-saga 的实现原理，并一步步地用代码构建 little-saga —— 一个 redux-saga 的简单版本。希望本文可以让你了解 redux-saga 背后的运行原理。
 
+## 本文目录
+
+* [0.1 文章结构](#01-%E6%96%87%E7%AB%A0%E7%BB%93%E6%9E%84)
+* [0.2 名词解释](#02-%E5%90%8D%E8%AF%8D%E8%A7%A3%E9%87%8A)
+* [0.3 关于 little-saga](#03-%E5%85%B3%E4%BA%8E-little-saga)
+* [1.1 生成器函数](#11-%E7%94%9F%E6%88%90%E5%99%A8%E5%87%BD%E6%95%B0)
+* [1.2 使用 while-true 来消费迭代器](#12-%E4%BD%BF%E7%94%A8-while-true-%E6%9D%A5%E6%B6%88%E8%B4%B9%E8%BF%AD%E4%BB%A3%E5%99%A8)
+* [1.3 使用递归函数来消费迭代器](#13-%E4%BD%BF%E7%94%A8%E9%80%92%E5%BD%92%E5%87%BD%E6%95%B0%E6%9D%A5%E6%B6%88%E8%B4%B9%E8%BF%AD%E4%BB%A3%E5%99%A8)
+* [1.4 双向通信](#14-%E5%8F%8C%E5%90%91%E9%80%9A%E4%BF%A1)
+* [1.5 effect 的类型与含义](#15-effect-%E7%9A%84%E7%B1%BB%E5%9E%8B%E4%B8%8E%E5%90%AB%E4%B9%89)
+* [1.6 result-first callback style](#16-result-first-callback-style)
+* [1.7 cancellation](#17-cancellation)
+* [1.8 effect 状态](#18-effect-%E7%8A%B6%E6%80%81)
+* [1.9 proc 初步实现](#19-proc-%E5%88%9D%E6%AD%A5%E5%AE%9E%E7%8E%B0)
+* [2.1 Task](#21-task)
+* [2.2 fork model](#22-fork-model)
+* [2.3 类 `ForkQueue`](#23-%E7%B1%BB-forkqueue)
+* [2.4 task context](#24-task-context)
+* [2.5 effect 类型拓展](#25-effect-%E7%B1%BB%E5%9E%8B%E6%8B%93%E5%B1%95)
+* [2.6 little-saga 核心部分的完整实现](#26-little-saga-%E6%A0%B8%E5%BF%83%E9%83%A8%E5%88%86%E7%9A%84%E5%AE%8C%E6%95%B4%E5%AE%9E%E7%8E%B0)
+* [2.7 Task 状态变化举例](#27-task-%E7%8A%B6%E6%80%81%E5%8F%98%E5%8C%96%E4%B8%BE%E4%BE%8B)
+* [2.8 类 `Env`](#28-%E7%B1%BB-env)
+* [3.1 commonEffects 拓展](#31-commoneffects-%E6%8B%93%E5%B1%95)
+* [3.2 channelEffects 拓展](#32-channeleffects-%E6%8B%93%E5%B1%95)
+* [3.3 compat 拓展](#33-compat-%E6%8B%93%E5%B1%95)
+* [3.4 scheduler](#34-scheduler)
+* [3.5 其他细节问题](#35-%E5%85%B6%E4%BB%96%E7%BB%86%E8%8A%82%E9%97%AE%E9%A2%98)
+
 ## 0.1 文章结构
 
 本文很长，大致分为四部分。文中每一个章节有对应的 x.y 标记，方便相互引用。
@@ -228,7 +256,7 @@ next()
 
 在 redux-saga 中，effect 是一个由[函数 effect](https://github.com/redux-saga/redux-saga/blob/v1.0.0-beta.1/packages/core/src/internal/io.js#L24) 生成、`[IO]` 字段为 `true` 的对象。little-saga 使用数组来表示 effect：数组的第一个元素为字符串，用于表示 effect 的类型，数组剩余元素为 effect 的参数。
 
-前面几个小节介绍了 ES2015 生成器的特性，讲解了如果使用递归函数来实现 effect-runner。我们发现，约定一些常见的 effect 类型，并恰当使用这些类型的话，我们可以用生成器语法写出富有表达力的代码。
+前面几个小节介绍了 ES2015 生成器的特性，讲解了如何使用递归函数来实现 effect-runner。我们发现，约定一些常见的 effect 类型，并恰当使用这些类型的话，我们可以用生成器语法写出富有表达力的代码。
 
 ## 1.6 result-first callback style
 
@@ -266,7 +294,7 @@ promise 一旦 resolve/reject 之后，就不能再改变状态了。effect 也�
 
 `digestEffect` 也调用了 `normalizeEffect` 来规范化 effect，这样一来，对于 promise/iterator，我们可以在 effect-producer 直接 yield 这些对象，而不需要将它们包裹在数组中。
 
-`digestEffect` 和 ``normalizeEffect` 两个函数的代码如下：
+`digestEffect` 和 `normalizeEffect` 两个函数的代码如下：
 
 ```javascript
 const noop = () => null
@@ -367,9 +395,7 @@ function proc(iterator, parentContext, cont) {
     }
   }
 
-  function digestEffect(rawEffect, cb) {
-    /* ...... */
-  }
+  // function digestEffect(rawEffect, cb) { /* ...... */ }
 
   // 执行effect，根据effect的类型调用不同的effectRunner
   function runEffect(effect, currCb) {
@@ -408,11 +434,6 @@ type Callback = (result: any, isErr: boolean) => void
 type Joiner = { task: Task; cb: Callback }
 
 interface Task {
-  private taskQueue: ForkQueue
-  private end: Callback
-  private cont: Callback
-  private joiners: Joiner[]
-
   cancel(): void
   toPromise(): Promise<any>
 
@@ -465,16 +486,16 @@ redux-saga 的文档也对 fork model [进行了详细的说明](https://redux-s
 
 ```typescript
 interface ForkQueue {
-  constructor(mainTask: MainTask, cont: Callback)
+  constructor(mainTask: MainTask)
   addTask(task: Task): void
   cancelAll(): void
   abort(err: Error): void
 }
 ```
 
-`ForkQueue` 的构造函数接受两个参数，参数 `mainTask` 代表当前迭代器自身代码的执行状态，参数 `cont` 是整个 fork-queue 的回调函数。当所有的 child-task 以及 mainTask 都完成时，我们需要调用 `cont` 来通知其 parent-saga（对应于 _2.2 fork model 中的「完成」_）。
+ForkQueue 的构造函数接受一个参数 `mainTask`，该参数代表当前迭代器自身代码的执行状态，forkQueue.cont 会在 ForkQueue 被构造之后进行设置。当所有的 child-task 以及 mainTask 都完成时，我们需要调用 forkQueue.cont 来通知其 parent-saga（对应于 _2.2 fork model 中的「完成」_）。
 
-`ForkQueue` 对象包含三个方法。方法 `addTask` 用于添加新的 child-task；方法 `cancelAll` 用于取消所有的 child-task；而方法 `abort` 不仅会取消所有的 child-task，还会调用 `cont` 向 parent-task 通知错误。
+ForkQueue 对象包含三个方法。方法 `addTask` 用于添加新的 child-task；方法 `cancelAll` 用于取消所有的 child-task；而方法 `abort` 不仅会取消所有的 child-task，还会调用 forkQueue.cont 向 parent-task 通知错误。
 
 little-saga 的 ForkQueue 实现如下：
 
@@ -485,9 +506,11 @@ class ForkQueue {
   // 使用 completed 变量来保证「完成」和「出错」的互斥
   completed = false
 
-  constructor(mainTask, cont) {
+  // cont will be set after calling constructor()
+  cont = undefined
+
+  constructor(mainTask) {
     this.mainTask = mainTask
-    this.cont = cont
     // mainTask 一开始就会被添加到数组中
     this.addTask(this.mainTask)
   }
@@ -548,7 +571,7 @@ class ForkQueue {
 
 context 是一个强大的机制，例如在 React 中，React context 用途非常广泛，react-redux / react-router 等相关类库都是基于该机制实现的。然而在 redux-saga 中，context 似乎很少被提起。
 
-在 little-saga 中，我们将充分利用 context 机制，并使用该机制实现「effect 类型拓展」、「stdChannel」、「连接 redux store」等功能。这些机制的实现会在本文后面提到。
+在 little-saga 中，我们将充分利用 context 机制，并使用该机制实现「effect 类型拓展」、「连接 redux store」等功能。这些机制的实现会在本文后面提到。
 
 ## 2.5 effect 类型拓展
 
@@ -620,7 +643,7 @@ function* Parent() {
 
 ![cont-graph](cont-graph.jpg)
 
-本小节中的代码比较复杂，如果觉得理解起来比较困难的话，可以和 _2.7 Task 状态变化举例_ 中的例子对照着看。
+本小节中的代码比较复杂，如果觉得理解起来比较困难的话，可以和 _2.7 Task 状态变化举例_ 对照着看。
 
 ### 2.6.2 函数 `proc`
 
@@ -958,7 +981,7 @@ new Env().use(commonEffects).run(function* rootSaga() {
 
 `env.use(channelEffects)` 不仅会添加类型拓展，还会在 ctx.channel 上设置一个默认 channel。当使用 put/take effect 时，如果没有指定 channel 参数，则默认使用 ctx.channel。
 
-使用 little-saga 中的 channel，可以实现任意两个 Task 之间的通信。不过 channel 又是一个很大的话题，本文就不再详细介绍了。channel 的相关源码的可读性还是相当不错的，欢迎直接[阅读源码](https://github.com/shinima/little-saga/tree/master/src/channelEffects)。
+使用 little-saga 中的 channel，可以实现任意两个 Task 之间的通信。不过 channel 又是一个很大的话题，本文就不再详细介绍了。channel 相关源码的可读性相当不错，欢迎直接[阅读源码](https://github.com/shinima/little-saga/tree/master/src/channelEffects)。
 
 ## 3.3 compat 拓展
 
@@ -1044,13 +1067,13 @@ function* genB() {
 
 在**使用** scheduler 的情况下，这两次 take 都是可以成功的，即 genA 可以 take 到 B，而 genB 可以 take 到 A，这也是所我们期望的情况。
 
-假设在**不使用** scheduler 的情况下，put-A 唤醒了 take-A。因为 put/take 的执行都是同步的，所以 take-A 被唤醒之后执行的下一句是 genB 中的 put-B，而此时 genA 还处于执行 put-A 的状态，genA 将丢失 B。也就是说在**不使用** scheduler 的情况下，嵌套的 put 很有可能导致部分 action 的丢失。
+假设在**不使用** scheduler 的情况下，put-A 唤醒了 take-A。因为这里的 put/take 的执行都是同步的，所以 take-A 被唤醒之后执行的下一句是 genB 中的 put-B，而此时 genA 还处于执行 put-A 的状态，genA 将丢失 B。也就是说在**不使用** scheduler 的情况下，嵌套的 put 很有可能导致部分 action 的丢失。
 
-使用函数 asap 包裹 put 的过程，可以保证「内层的 put」延迟到「外层的 put 执行结束时」才开始执行，杜绝嵌套 put 的发生。asap 是 as soon as possible 的缩写，`asap(fn)` 的意思可以理解为「当外层的 asap 任务都执行完之后，尽可能快地执行 fn」。
+使用函数 asap 包裹 put 的过程，可以保证「内层的 put」延迟到「外层的 put 执行结束时」才开始执行，从而避免嵌套 put。asap 是 as soon as possible 的缩写，`asap(fn)` 的意思可以理解为「当外层的 asap 任务都执行完之后，尽可能快地执行 fn」。
 
 我们再考虑上面代码中的 LINE-1 和 LINE-2，在**不使用** scheduler 的情况下，这两行代码的前后顺序会影响运行结果：因为默认 channel 用的是 multicastChannel，multicastChannel 没有缓存（buffer），所以为了能够成功 take-A，take-A 必须在 put-A 之前就开始执行。
 
-使用函数 suspend/flush 包裹 fork/spawn 的过程，可以保证「fork/spawn 中的同步 put」延迟到「fork/spawn 执行结束时」才开始执行。这样一来，take-A 总是能比 put-B 先执行，LINE-1 和 LINE-2 的前后顺序就不会影响运行结果了。
+使用函数 suspend/flush 包裹 fork/spawn 的过程，可以保证「fork/spawn 中的同步 put」延迟到「fork/spawn 执行结束时」才开始执行。这样一来，take-A 总是能比 put-A 先执行，LINE-1 和 LINE-2 的前后顺序就不会影响运行结果了。
 
 ## 3.5 其他细节问题
 

@@ -1,12 +1,15 @@
 # 构建你自己的 redux-saga
 
-知乎上已经有不少介绍 redux-saga 的好文章了，例如 [redux-saga 实践总结](https://zhuanlan.zhihu.com/p/23012870)、[浅析 redux-saga 实现原理](https://zhuanlan.zhihu.com/p/30098155)、[Redux-Saga 漫谈](https://zhuanlan.zhihu.com/p/35437092)。本文不讨论 redux-saga 的使用方式，而是介绍其实现原理，并一步步地用代码构建 little-saga —— 一个 redux-saga 的简单版本。
-
-little-saga 大量参考了 redux-saga 源码，参考的版本为 redux-saga v1.0.0-beta.1。redux-saga 对许多边界情况做了处理，代码比较晦涩，而 little-saga 则进行了大量简化，所以两者有许多实现细节差异。本文中出现的代码都是 little-saga 的，不过我偶尔也会附上相应的 redux-saga 源码链接，大家可以对照着看。
+知乎上已经有不少介绍 redux-saga 的好文章了，例如 [redux-saga 实践总结](https://zhuanlan.zhihu.com/p/23012870)、[浅析 redux-saga 实现原理](https://zhuanlan.zhihu.com/p/30098155)、[Redux-Saga 漫谈](https://zhuanlan.zhihu.com/p/35437092)。本文将介绍 redux-saga 的实现原理，并一步步地用代码构建 little-saga —— 一个 redux-saga 的简单版本。希望本文可以让你了解 redux-saga 背后的运行原理。
 
 ## 0.1 文章结构
 
-本文很长，大致分为四部分。0.x 介绍文章的一些相关信息。1.x 讲解一些基础概念并实现了一个简单版本的 proc 函数。2.x 介绍 redux-saga/little-saga 的一些核心概念，例如 Task、fork model、effect 类型拓展，并实现了完整的 proc 函数。3.x 使用 little-saga 的拓展机制，实现了 race/all、channel、集成 redux 等功能，也讨论了一些其他相关问题。这四个部分之间的内容也没有十分明确的区别，只是方便用 x.y 的方式标记下罢了。
+本文很长，大致分为四部分。文中每一个章节有对应的 x.y 标记，方便相互引用。
+
+* 0.x 介绍文章的一些相关信息。
+* 1.x 讲解一些基础概念并实现一个简单版本的 proc 函数。
+* 2.x 介绍 redux-saga/little-saga 的一些核心概念，例如 Task、fork model、effect 类型拓展，并实现了 little-saga 核心部分。
+* 3.x 使用 little-saga 的拓展机制，实现了 race/all、channel、集成 redux 等功能，也讨论了一些其他相关问题。
 
 ## 0.2 名词解释
 
@@ -18,11 +21,11 @@ saga 又是一个让人困扰的单词 (・へ・)，这里给一个简单的说
 
 ## 0.3 关于 little-saga
 
-[little-saga](https://github.com/shinima/little-saga) 已经跑通了 redux-saga 的绝大部分测试（跳过了 little-saga 没有实现的那一部分测试），使用 `little-saga/compat` 已经可以替换 redux-saga，例如我上次写的坦克大战复刻版就已经[使用 little-saga 替换掉了 redux-saga](https://github.com/shinima/battle-city/commit/e15d8bd5b9994f9f1af61c0bc16b58461ec9c33a)。little-saga 已经发布在 NPM 上，欢迎大家下载使用。
+little-saga 大量参考了 redux-saga 源码，参考的版本为 redux-saga v1.0.0-beta.1。redux-saga 对许多边界情况做了处理，代码比较晦涩，而 little-saga 则进行了大量简化，所以两者有许多实现细节差异。本文中出现的代码都是 little-saga 的，不过我偶尔也会附上相应的 redux-saga 源码链接，大家可以对照着看。
 
-不过在日常开发中，我仍然推荐使用 redux-saga，redux-saga 经过时间的考验，对一些边界情况有着完善的处理。
+[little-saga](https://github.com/shinima/little-saga) 已经跑通了 redux-saga 的绝大部分测试（跳过了 little-saga 没有实现的那一部分功能的测试），使用 `little-saga/compat` 已经可以替换 redux-saga，例如我上次写的[坦克大战复刻版](https://zhuanlan.zhihu.com/p/35551654)就已经[使用 little-saga 替换掉了 redux-saga](https://github.com/shinima/battle-city/commit/e15d8bd5b9994f9f1af61c0bc16b58461ec9c33a)。
 
-little-saga 的特点是没有绑定 redux，所以有的时候（例如写网络爬虫、写游戏逻辑时）如果你并不想使用 redux，但仍想用 fork model 和 channel 来管理异步逻辑，可以尝试一下 little-saga。
+little-saga 的特点是没有绑定 redux，所以有的时候（例如写网络爬虫、写游戏逻辑时）如果并不想使用 redux，但仍想用 fork model 和 channel 来管理异步逻辑，可以尝试一下 little-saga。little-saga 的初衷还是通过简化 redux-saga，能让更多人理解 redux-saga 背后的原理。
 
 ## 1.1 生成器函数
 
@@ -76,7 +79,7 @@ while (true) {
 // 输出 1, 2, 3, 4，然后抛出异常 '5 is bad input'
 ```
 
-然而，while-true 有一个致命缺陷：while-true 是同步的。这意味着生成器无法暂停执行直到某个异步任务（例如网络请求）完成，也就意味着无法使用 while-true 实现 redux-saga 了。
+然而，while-true 仍有一个缺陷：while-true 是同步的。这意味着生成器无法暂停执行直到某个异步任务（例如网络请求）完成，也就意味着无法使用 while-true 实现 redux-saga 了。
 
 ## 1.3 使用递归函数来消费迭代器
 
@@ -108,11 +111,11 @@ next()
 
 这个例子比较简单，只是对 value 进行奇偶判断。不过我们不难设想以下的使用方法：effect-producer 产生 promise，而 effect-runner 对 promise 的处理方式如下：当 promise resolve 的时候调用迭代器 的 next 方法，当 promise reject 的时候调用迭代器的 throw 方法。我们就可以用生成器的语法实现 async/await，这也是生成器比 async/await 更加强大的原因。而 redux-saga/little-saga 不仅实现了对 promise 的处理，还实现了功能更为强大的 fork model。
 
-在本文后面，我们称该递归函数为「驱动函数」。注意不要将驱动函数 next 和迭代器的 next 方法搞混，迭代器的 next 方法被调用的形式是 `iterator.next(someValue)`，而 next 方法被调用的形式是 `next(arg, isErr)`。在 redux-saga/little-saga，函数名字为 `next` 的情况只有驱动函数和迭代器 next 方法这两种，所以如果发现一个叫做 `next` 的函数，且该函数不是迭代器方法，那么该函数就是驱动函数。
+在本文后面，我们称该递归函数为「驱动函数」。注意不要将驱动函数 next 和迭代器的 next 方法搞混，迭代器的 next 方法被调用的形式是 `iterator.next(someValue)`，而驱动函数被调用的形式不同。在 redux-saga/little-saga，函数名字为 `next` 的情况只有驱动函数和迭代器 next 方法这两种，所以如果发现一个叫做 `next` 的函数，且该函数不是迭代器方法，那么该函数就是驱动函数。
 
 ## 1.4 双向通信
 
-前面的例子中，我们只用到了单项通信：effect-runner 调用 `iterator.next()` 获取 effect，但 effect-runner 并没有将数据传递给 effect-producer。在 redux-saga 中，我们往往需要使用 yield 语句的返回值，返回值的含义取决于 effect 的类型。例如下面这个例子（这个例子需要依赖于 redux-saga/little-saga 而且是捏造出来的，不能像其他例子那样稍微改改就能运行在浏览器中）：
+前面的例子中，我们只用到了单项通信：effect-runner 调用 `iterator.next()` 获取 effect，但 effect-runner 并没有将数据传递给 effect-producer。在 redux-saga 中，我们往往需要使用 yield 语句的返回值，返回值的含义取决于 effect 的类型。例如下面这个例子：
 
 ```javascript
 function* someSaga() {
@@ -396,8 +399,6 @@ function proc(iterator, parentContext, cont) {
 }
 ```
 
----
-
 ## 2.1 Task
 
 proc 函数（[redux-saga 的源码](https://github.com/redux-saga/redux-saga/blob/v1.0.0-beta.1/packages/core/src/internal/proc.js#L173)）用于运行一个迭代器，并返回一个 Task 对象。Task 对象描述了该迭代器的运行状态，我们首先来看看 Task 的接口（使用 TypeScript 来表示类型信息）。在 little-saga 中，我们将使用**类似**的 Task 接口。（注意是类似的接口，而不是相同的接口）
@@ -619,7 +620,7 @@ function* Parent() {
 
 ![cont-graph](cont-graph.jpg)
 
-本小节中的代码比较复杂，如果觉得理解起来比较困难的话，可以和 _2.7 Task 状态举例_ 中的例子对照着看。
+本小节中的代码比较复杂，如果觉得理解起来比较困难的话，可以和 _2.7 Task 状态变化举例_ 中的例子对照着看。
 
 ### 2.6.2 函数 `proc`
 
@@ -686,7 +687,6 @@ function proc(iterator, parentContext, cont) {
       }
     } catch (error) {
       if (!mainTask.isRunning) {
-        // ???? TODO 这一行代码什么意思 我给忘了 参照 LINE-A?
         throw error
       }
       if (mainTask.isCancelled) {
@@ -694,7 +694,7 @@ function proc(iterator, parentContext, cont) {
         console.error(error)
       }
       mainTask.isRunning = false
-      mainTask.cont(error, true) // LINE-A
+      mainTask.cont(error, true)
     }
   }
 
@@ -796,7 +796,9 @@ class Task {
 
 这一节中代码较多，而且代码的逻辑密度很高。想要完全理解 little-saga 的实现思路，还是需要仔细阅读源代码才行。
 
-## 2.7 (todo) Task 状态举例
+## 2.7 Task 状态变化举例
+
+下面的代码是 2.6 中的例子。
 
 ```javascript
 function* Parent() {
@@ -806,15 +808,28 @@ function* Parent() {
 }
 ```
 
-(todo) 画一些图说明在不同时刻 Parent/Child1/Child2 的状态，画出 mainTask.isRunning task.isRunning 等重要字段。如果能够画出一个随着时间而变化的动图就更好了。
+下表展示了这个例子在一些关键时间点的执行情况与相应的状态变化。注意在下表中，如果没有指定 task/forkQueue/mainTask 是属于 Parent 还是 Child1/Child2，默认都是属于 Parent 的。下表只展示了这个例子正常完成的过程，我们也可以思考一下在 t=50 / t=150 / t=250 / t=350 等不同时间点，如果 Parent 被取消了，代码又会怎么执行。
 
-* t=0 时，Parent 开始运行
-* LINE-1 执行完成时 ...
-* LINE-2 执行完成时 ...
-* LINE-3 执行开始时 ...
-* t=100 时，Child1 执行完成，此时 ...
-* t=200 时，delay(200) 执行完成，此时 ...
-* t=300 时，Child2 执行完成，此时 ...
+| 时间点 | 事件            | 状态变化                                                    |
+| ------ | --------------- | ----------------------------------------------------------- |
+| t=0    | Parent 开始运行 | Parent 的 task 被创建，且 mainTask 被添加到 forkQueue 中    |
+| t=0    | LINE-1 执行     | Task Child1 被创建，且被添加到 forkQueue 中                 |
+| t=0    | LINE-2 执行     | Task Child2 被创建，且被添加到 forkQueue 中                 |
+| t=0    | LINE-3 执行     | 驱动函数执行 `result = iterator.next(arg)`                  |
+|        |                 | 此时 result 为 delay(200) 对应的 promise effect             |
+|        |                 | 驱动函数间接调用 resolvePromise 来执行该 effect             |
+|        |                 | next.cancel 被 resolvePromise 设置为取消定时器              |
+| t=100  | Child1 完成     | Child1.cont 被调用；Child1 从 forkQueue 中被移除            |
+|        |                 | forkQueue 中仍存在 Child2 与 mainTask                       |
+| t=200  | delay(200) 完成 | mainTask.cont 被调用；**mainTask.isRunning 被设置为 false** |
+|        |                 | forkQueue.result 记下了 mainTask 的结果                     |
+|        |                 | mainTask 从 forkQueue 中被移除；forkQueue 中还剩下 Child2   |
+| t=300  | Child2 完成     | Child2.cont 被调用；Child2 从 forkQueue 中被移除            |
+|        |                 | forkQueue 变为空，forkQueue.cont（也就是 task.end) 被调用   |
+|        | task.end 被调用 | **task.isRunning 被设置为 false**                           |
+|        |                 | task.result 被设置为 forkQueue.result                       |
+|        |                 | **task.cont 被调用，Parent 进入完成状态**                   |
+|        |                 | task.joiners 被唤醒                                         |
 
 ## 2.8 类 `Env`
 
@@ -1039,8 +1054,10 @@ function* genB() {
 
 ## 3.5 其他细节问题
 
-这一个小节列举了一些 redux-saga/little-saga 中仍存在的一些细节问题，不过这些问题在平时编程中较为少见，影响也不大。
+本小节记录了 redux-saga/little-saga 中仍存在的一些细节问题，不过这些问题在平时编程中较为少见，影响也不大。
 
 Task 的「取消」和「完成」是互斥的。Task 被取消时代码会直接跳转进入 finally 语句块，但此时仍有可能发生错误，即发生了「执行 cancel 逻辑时发生错误」的现象。此时 Task 的状态已经为「被取消」，我们不能将 task 的状态修改为「完成（出错）」。对于这类错误，little-saga 只是简单地使用 console.error 进行了打印，并没有较为优雅的处理方式。所以我们在使用 redux-saga/little-saga 写代码的时候，尽量避免过于复杂的 cancel 逻辑，以防在 cancel 逻辑中发生错误。
 
 当一个往 channel 中 put 一个 END 的时候，正在 take 该 channel 的该怎么办？[redux-saga 中的处理比较奇怪](https://github.com/redux-saga/redux-saga/blob/v1.0.0-beta.1/packages/core/src/internal/proc.js#L301-L303)，我询问了一下作者，他表示这是一个用在服务端渲染的 hack。而 little-saga 中做了简化，如果 take 得到了 END，那么就将 END 看作是 TASK_CANCEL。
+
+有很多内容本文没有提到，例如「调用迭代器的 throw/return 方法时代码的执行顺序」，「异常的捕获与处理」等。另外，redux-saga 的源码中也有多处用 TODO 进行了标记，所以还有许多问题等待这去解决。

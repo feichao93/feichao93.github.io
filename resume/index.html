@@ -58,7 +58,7 @@
   <section>
     <h1>项目经历</h1>
     <section class=project>
-      <h2>Temme
+      <h2>temme
         <iframe
           src="https://ghbtns.com/github-btn.html?user=shinima&repo=temme&type=star&count=true"
           frameborder="0"
@@ -69,7 +69,10 @@
       </h2>
       从 HTML 中提取 JSON 数据的开源工具。在 CSS 选择器的基础上使用 PEG.js 定义了额外的语法来抓取 HTML
       中所需要的字段，支持多字段选取、列表选取、格式处理等功能。
-      该工具包含了完善的文档、测试、实例，设置了持续集成并发布在 NPM 上。项目地址：
+      该工具包含了完善的文档、测试、实例，设置了持续集成并发布在 NPM 上。
+      同时 VSCode 编辑器中也有该工具的相应插件，提供了语法高亮和执行选择器的功能。
+
+      项目地址：
       <a href="https://github.com/shinima/temme" target=_blank>
         https://github.com/shinima/temme
       </a>
@@ -84,24 +87,45 @@
           height="20px"
         ></iframe>
       </h2>
-      基于原版素材，主要使用 TypeScript 和 React 进行实现，独立完成整体框架设计与具体实现；技术选型方面主要使用 React 生成 SVG，使用 Immutable.js
-      构建游戏数据结构，使用 Redux 管理全局数据，使用 redux-saga 处理复杂的游戏逻辑；针对鼠标的交互方式设计并实现了新的关卡编辑器，并提供了关卡管理功能。
+      基于原版素材，主要使用 TypeScript 和 React 进行实现，独立完成整体框架设计与具体实现；
+      技术选型方面主要使用 React 生成 SVG，使用 Immutable.js 构建游戏数据结构，
+      使用 Redux 管理全局数据，使用 redux-saga 处理复杂的游戏逻辑；
+      针对鼠标的交互方式设计并实现了新的关卡编辑器，并提供了关卡管理功能。
       游戏地址：<a href="http://shinima.pw/battle-city/" target=_blank>http://shinima.pw/battle-city/</a>
       <br>完整项目介绍：
       <a href="https://zhuanlan.zhihu.com/p/35551654" target=_blank>https://zhuanlan.zhihu.com/p/35551654</a>
     </section>
     <section class=project>
-      <h2>ASPP 中文文本标注工具 (2018.05 - 至今)</h2>
-      该工具主要包括三个部分：工具前端使用 React 进行构建，用于文本标注和结果查看；工具后端使用 Node/Koa 进行搭建，实现了文档和标注结果的管理与存储；工具算法适配模块将用户在前端的交互和外部推荐算法连接起来，以提高用户的标注效率。（ASPP 标注工具仍在开发中）
+      <h2>
+        little-saga
+        <iframe
+          src="https://ghbtns.com/github-btn.html?user=shinima&repo=little-saga&type=star&count=true"
+          frameborder="0"
+          scrolling="0"
+          width="170px"
+          height="20px"
+        ></iframe>
+      </h2>
+      根据 redux-saga 源码修改而来的简化版本。little-saga 核心部分并不绑定 redux，而是实现了独立的 effects 处理机制与 fork model。
+      little-saga 具有良好的拓展性，可以在运行时更新 effect 的解释器，为新的 effect 类型注册对应的处理函数。
+      little-saga 核心部分只包括少数 effect 类型（promise / fork / join / cancel 等），
+      剩下的 effect 类型（all / race / take / put 等）则使用拓展的方式进行实现，并跑通了 redux-saga 中相应的测试。
+      项目地址：
+      <a href="https://github.com/shinima/editor" target=_blank>
+        https://github.com/shinima/editor
+      </a>
+      <br>在知乎上我也写了一篇非常详细的文章介绍 little-saga 的原理。
+      <a href="https://zhuanlan.zhihu.com/p/37356948" target=_blank>https://zhuanlan.zhihu.com/p/37356948</a>
     </section>
     <section class=project>
       <h2>简易 SVG 编辑器 (2018.01 - 2018.04)</h2>
-      <a href="http://shinima.pw/editor/" target=_blank>该编辑器</a>
-      主要功能是绘制多边形等形状，以及将语义信息附加到绘制的形状上。编辑器提供了丰富的快捷键和自动对齐功能，可以完成较为复杂的图形绘制。编辑器采用了响应式编程框架
-      Cycle.js，对键盘、鼠标、用户行为等进行了合理抽象，用简洁直观的代码清晰地描述出了应用的数据流。
-      该编辑器是 <a href="https://longaspire.github.io/trips/" target=_blank>TRIPS 系统</a>的室内空间建模工具；而 TRIPS 论文已经被 VLDB 2018
-      接受。
-      编辑器详情请见 GitHub 仓库：
+      该编辑器主要功能是绘制多边形等形状，以及将语义信息附加到绘制的形状上。
+      编辑器提供了丰富的快捷键和自动对齐功能，可以完成较为复杂的图形绘制。
+      编辑器采用了响应式编程框架 Cycle.js，对键盘、鼠标、用户行为等进行了合理抽象，用简洁直观的代码清晰地描述出了应用的数据流。
+      该编辑器是 <a href="https://longaspire.github.io/trips/" target=_blank>TRIPS 系统</a>
+      的室内空间建模工具；而 TRIPS 论文已经被 VLDB 2018 接受。
+
+      项目地址：
       <a href="https://github.com/shinima/editor" target=_blank>
         https://github.com/shinima/editor
       </a>

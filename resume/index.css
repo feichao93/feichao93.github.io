@@ -64,15 +64,12 @@ html {
     font-size: 1rem;
 }
 
-main > section {
-    margin-bottom: 2rem;
-}
-
 section {
     color: #444444;
 }
 
 section > h1 {
+    margin-top: 0.5em;
     margin-bottom: 0.3em;
     color: #333333;
 }

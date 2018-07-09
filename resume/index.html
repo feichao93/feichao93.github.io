@@ -71,7 +71,7 @@
       该工具包含了完善的文档、测试、实例，设置了持续集成并发布在 NPM 上。
       同时 VSCode 编辑器中也有该工具的相应插件，提供了语法高亮和执行选择器的功能。
 
-      项目地址：
+      <br>项目地址：
       <a href="https://github.com/shinima/temme" target=_blank>
         https://github.com/shinima/temme
       </a>
@@ -90,29 +90,25 @@
       技术选型方面主要使用 React 生成 SVG，使用 Immutable.js 构建游戏数据结构，
       使用 Redux 管理全局数据，使用 redux-saga 处理复杂的游戏逻辑；
       针对鼠标的交互方式设计并实现了新的关卡编辑器，并提供了关卡管理功能。
-      游戏地址：<a href="http://shinima.pw/battle-city/" target=_blank>http://shinima.pw/battle-city/</a>
+      <br>游戏地址：
+      <a href="http://shinima.pw/battle-city/" target=_blank>http://shinima.pw/battle-city/</a>
       <br>完整项目介绍：
       <a href="https://zhuanlan.zhihu.com/p/35551654" target=_blank>https://zhuanlan.zhihu.com/p/35551654</a>
     </section>
     <section class=project>
-      <h2>
-        little-saga
-        <iframe
-          src="https://ghbtns.com/github-btn.html?user=shinima&repo=little-saga&type=star&count=true"
-          frameborder="0"
-          scrolling="0"
-          width="170px"
-          height="20px"
-        ></iframe>
-      </h2>
-      根据 redux-saga 源码修改而来的简化版本。little-saga 核心部分并不绑定 redux，而是实现了独立的 effects 处理机制与 fork model。
+      <h2>redux-saga / little-saga</h2>
+      我是开源项目
+      <a href="https://github.com/redux-saga/redux-saga" target=_blank>redux-saga</a>
+      的协作者（collaborator）之一，目前和其他协作者一起维护该项目。
+      我对 redux-saga 源码有较深的理解，也给 redux-saga 贡献过不少核心代码。
+      <br>
+      而 little-saga 则是我自己根据 redux-saga 源码修改而来的简化版本，主要目的是帮助更多人理解 redux-saga 的原理。
+      little-saga 核心部分并不绑定 redux，而是实现了独立的 effects 处理机制与 fork model。
       little-saga 具有良好的拓展性，可以在运行时更新 effect 的解释器，为新的 effect 类型注册对应的处理函数。
-      little-saga 核心部分只包括少数 effect 类型（promise / fork / join / cancel 等），
-      剩下的 effect 类型（all / race / take / put 等）则使用拓展的方式进行实现，并跑通了 redux-saga 中相应的测试。
-      同时我也是 redux-saga 的 collaborator 之一。
-      <br>项目地址：
-      <a href="https://github.com/shinima/little-saga" target=_blank>
-        https://github.com/shinima/little-saga
+      little-saga 核心部分只包括少数核心 effect 类型，剩下的 effect 类型则使用拓展的方式进行实现，并跑通了 redux-saga 中相应的测试。
+      <br>详情可见：
+      <a href="https://zhuanlan.zhihu.com/p/35551654" target=_blank>
+        https://zhuanlan.zhihu.com/p/35551654
       </a>
     </section>
     <section class=project>

@@ -12,6 +12,22 @@
         box-sizing: border-box;
       }
 
+      html {
+        font-size: 16px;
+      }
+
+      @media (min-width: 360px) {
+        html {
+          font-size: 24px;
+        }
+      }
+
+      @media (min-width: 600px) {
+        html {
+          font-size: 32px;
+        }
+      }
+
       body {
         margin: 0;
         font-family: -apple-system, BlinkMacSystemFont, Helvetica Neue,
@@ -26,31 +42,30 @@
       }
 
       .wrapper {
-        height: 100vh;
         display: flex;
         flex-flow: column;
         align-items: center;
       }
 
       .links {
-        margin-top: 16px;
+        margin-top: 1rem;
       }
 
       .link {
-        font-size: 16px;
+        font-size: 1rem;
         display: flex;
-        width: 128px;
-        height: 32px;
-        line-height: 32px;
-        padding: 0 20px;
+        width: 8rem;
+        height: 2rem;
+        line-height: 2rem;
+        padding: 0 1.25rem;
         align-items: center;
         text-decoration: none;
         color: #999;
       }
 
       .link > img {
-        width: 16px;
-        margin-right: 8px;
+        width: 1rem;
+        margin-right: 0.5rem;
       }
 
       .link > span {
@@ -87,8 +102,12 @@
   </head>
   <body>
     <div class="wrapper">
-      <h1 style="font-size: 28px; letter-spacing: 4px; margin-top: 20vh">肥超</h1>
-      <h2 style="font-size: 20px; color: #999; margin-top: 4px">前端、Node</h2>
+      <h1 style="font-size: 1.75rem; letter-spacing: .25rem; margin-top: 10vh">
+        肥超
+      </h1>
+      <h2 style="font-size: 1.25rem; color: #999; margin-top: 0.25rem">
+        前端、Node
+      </h2>
       <div class="links">
         <a
           class="link gh-link"

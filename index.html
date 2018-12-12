@@ -1,24 +1,127 @@
 <!DOCTYPE html>
 <html lang="zh-cn">
-<head>
-  <title>Shinima's Personal Website</title>
-</head>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+    />
+    <title>肥超 - 个人主页</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
 
-<p style="font-size: 2rem; line-height: 1.5">
-  Welcome to my homepage, but it is still under construction.
-  <br>
-  See
-  <a href="https://github.com/shinima/shinima.github.io">the readme of this repository</a>
-  for more detail.
-  <br>
-  My resume is <a href="/resume/">here</a>.
-</p>
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, Helvetica Neue,
+          PingFang SC, Microsoft YaHei, Source Han Sans SC, Noto Sans CJK SC,
+          WenQuanYi Micro Hei, sans-serif;
+      }
 
-<p style="font-size: 2rem; line-height: 1.5">
-  这里是肥超的主页，不过因为比较懒，这里还什么也没有。
-  <br>
-  <a href="https://github.com/shinima/shinima.github.io">点击这里</a>在 GitHub 上查看更多信息
-  <br>
-  <a href="/resume/">点击这里</a>查看我的简历
-</p>
+      h1,
+      h2 {
+        font-weight: normal;
+        margin: 0;
+      }
+
+      .wrapper {
+        height: 100vh;
+        display: flex;
+        flex-flow: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .links {
+        margin-top: 16px;
+      }
+
+      .link {
+        font-size: 16px;
+        display: flex;
+        width: 128px;
+        height: 32px;
+        line-height: 32px;
+        padding: 0 20px;
+        align-items: center;
+        text-decoration: none;
+        color: #999;
+      }
+
+      .link > img {
+        width: 16px;
+        margin-right: 8px;
+      }
+
+      .link > span {
+        flex-grow: 1;
+        text-align: center;
+      }
+
+      .link:hover {
+        color: steelblue;
+        outline: 1px dashed black;
+        outline-offset: -2px;
+      }
+
+      .zhihu-link:hover {
+        color: #348ce7;
+        outline-color: #348ce7;
+      }
+
+      .gh-link:hover {
+        color: #171516;
+        outline-color: #171516;
+      }
+
+      .yuque-link:hover {
+        color: #52c577;
+        outline-color: #52c577;
+      }
+
+      .resume-link:hover {
+        color: #f44336;
+        outline-color: #f44336;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <h1 style="font-size: 28px; letter-spacing: 4px">肥超</h1>
+      <h2 style="font-size: 20px; color: #999; margin-top: 4px">前端、Node</h2>
+      <div class="links">
+        <a
+          class="link gh-link"
+          target="_blank"
+          href="https://github.com/shinima/"
+        >
+          <img src="static/github-icon.png" alt="github-icon" />
+          <span>GitHub</span>
+        </a>
+        <a
+          class="link zhihu-link"
+          target="_blank"
+          href="https://www.zhihu.com/people/shifeichao/"
+        >
+          <img src="static/zhihu.ico" alt="zhihu-icon" /> <span>知乎</span>
+        </a>
+        <a
+          class="link yuque-link"
+          target="_blank"
+          href="https://www.yuque.com/shinima/blog"
+        >
+          <img src="static/yuque-icon.png" alt="yuque-icon" /> <span>博客</span>
+        </a>
+        <a
+          class="link resume-link"
+          target="_blank"
+          href="https://shinima.pw/resume/"
+        >
+          <img src="static/resume-icon.svg" alt="resume-icon" />
+          <span>简历</span>
+        </a>
+      </div>
+    </div>
+  </body>
 </html>

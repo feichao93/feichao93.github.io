@@ -1,1 +1,0 @@
-# http://shinima.pw/

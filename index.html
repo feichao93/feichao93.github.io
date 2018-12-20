@@ -13,16 +13,16 @@
       }
 
       html {
-        font-size: 16px;
+        font-size: 24px;
       }
 
-      @media (min-width: 360px) {
+      @media (min-width: 600px) {
         html {
           font-size: 24px;
         }
       }
 
-      @media (min-width: 600px) {
+      @media (min-width: 1000px) {
         html {
           font-size: 32px;
         }
@@ -47,94 +47,154 @@
         align-items: center;
       }
 
-      .links {
+      .parts {
+        display: flex;
+        flex-flow: column;
+        padding-top: 1rem;
+      }
+
+      .part {
         margin-top: 1rem;
+      }
+      .part:first-child {
+        margin-top: 0;
+      }
+
+      @media (min-width: 600px) {
+        .parts {
+          flex-flow: row;
+        }
+        .part {
+          margin-top: 0;
+          margin-left: 2rem;
+        }
+      }
+
+      .part .title {
+        margin: 0 0 0.2rem;
+        padding-left: 1.25rem;
+        font-size: 0.85rem;
       }
 
       .link {
         font-size: 1rem;
         display: flex;
-        width: 8rem;
+        width: 9rem;
         height: 2rem;
         line-height: 2rem;
-        padding: 0 1.25rem;
         align-items: center;
         text-decoration: none;
         color: #999;
       }
 
       .link > img {
-        width: 1rem;
+        margin-left: 1.25rem;
+        height: 1rem;
         margin-right: 0.5rem;
       }
 
       .link > span {
         flex-grow: 1;
         text-align: center;
+        margin-right: 1.25rem;
       }
 
       .link:hover {
-        color: steelblue;
-        outline: 1px dashed black;
+        color: var(--color);
+        outline: 1px dashed var(--color);
         outline-offset: -2px;
       }
 
-      .zhihu-link:hover {
-        color: #348ce7;
-        outline-color: #348ce7;
-      }
-
-      .gh-link:hover {
-        color: #171516;
-        outline-color: #171516;
-      }
-
-      .yuque-link:hover {
-        color: #52c577;
-        outline-color: #52c577;
-      }
-
-      .resume-link:hover {
-        color: #f44336;
-        outline-color: #f44336;
+      .small-text {
+        font-size: 0.6rem;
       }
     </style>
   </head>
   <body>
     <div class="wrapper">
-      <h1 style="font-size: 1.75rem; letter-spacing: .25rem; margin-top: 10vh">
-        肥超
+      <h1 style="margin-top: 10vh">
+        <span style="font-size: 1.5rem; letter-spacing: .2rem;"> 肥超 </span>
+        <small style="font-size: 1.2rem; color: #999; margin-top: 0.25rem">
+          前端、Node
+        </small>
       </h1>
-      <h2 style="font-size: 1.25rem; color: #999; margin-top: 0.25rem">
-        前端、Node
-      </h2>
-      <div class="links">
-        <a
-          class="link gh-link"
-          target="_blank"
-          href="https://github.com/shinima/"
-        >
-          <img src="static/github-icon.png" alt="github-icon" />
-          <span>GitHub</span>
-        </a>
-        <a
-          class="link zhihu-link"
-          target="_blank"
-          href="https://www.zhihu.com/people/shifeichao/"
-        >
-          <img src="static/zhihu.ico" alt="zhihu-icon" /> <span>知乎</span>
-        </a>
-        <a
-          class="link yuque-link"
-          target="_blank"
-          href="https://www.yuque.com/shinima/blog"
-        >
-          <img src="static/yuque-icon.png" alt="yuque-icon" /> <span>博客</span>
-        </a>
-        <a class="link resume-link" target="_blank" href="resume/">
-          <img src="static/resume-icon.png" alt="resume-icon" />
-          <span>简历</span>
-        </a>
+      <div class="parts" style="--color: #000">
+        <div class="part">
+          <p class="title">链接</p>
+          <a
+            class="link"
+            style="--color: #171516;"
+            target="_blank"
+            href="https://github.com/shinima/"
+          >
+            <img src="static/github-icon.png" alt="github-icon" />
+            <span>GitHub</span>
+          </a>
+          <a
+            class="link"
+            style="--color: #348ce7;"
+            target="_blank"
+            href="https://www.zhihu.com/people/shifeichao/"
+          >
+            <img src="static/zhihu.ico" alt="zhihu-icon" /> <span>知乎</span>
+          </a>
+          <a
+            class="link"
+            style="--color: #52c577;"
+            target="_blank"
+            href="https://www.yuque.com/shinima/blog"
+          >
+            <img src="static/yuque-icon.png" alt="yuque-icon" />
+            <span>博客</span>
+          </a>
+          <a
+            class="link"
+            style="--color: #f44336;"
+            target="_blank"
+            href="resume/"
+          >
+            <img src="static/resume-icon.png" alt="resume-icon" />
+            <span>简历</span>
+          </a>
+        </div>
+        <div class="part">
+          <p class="title">项目</p>
+          <a
+            class="link small-text"
+            style="--color: #95d675;"
+            href="https://github.com/redux-saga/redux-saga"
+            target="_blank"
+          >
+            <img src="static/Redux-Saga-Logo.png" alt="redux-saga-logo" />
+            <span>Redux-Saga</span>
+          </a>
+          <a
+            class="link small-text"
+            style="--color: #e09a37;"
+            href="https://github.com/shinima/battle-city"
+            target="_blank"
+          >
+            <img
+              src="static/battle-city.svg"
+              alt="redux-saga-logo"
+              style="width: 1.5rem; height: 1.5rem"
+            />
+            <span>坦克大战</span>
+          </a>
+          <a
+            class="link small-text"
+            style="--color: #aaaaaa;"
+            href="https://github.com/shinima/battle-city"
+            target="_blank"
+          >
+            <img
+              src="static/temme-logo.png"
+              alt="redux-saga-logo"
+              style="width: 1.25rem; height: 1.25rem"
+            />
+            <span>temme 选择器</span>
+          </a>
+        </div>
       </div>
     </div>
   </body>

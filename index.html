@@ -30,9 +30,8 @@
 
       body {
         margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, Helvetica Neue,
-          PingFang SC, Microsoft YaHei, Source Han Sans SC, Noto Sans CJK SC,
-          WenQuanYi Micro Hei, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, Helvetica Neue, PingFang SC, Microsoft YaHei,
+          Source Han Sans SC, Noto Sans CJK SC, WenQuanYi Micro Hei, sans-serif;
       }
 
       h1,
@@ -79,7 +78,7 @@
       .link {
         font-size: 1rem;
         display: flex;
-        width: 9rem;
+        width: 10rem;
         height: 2rem;
         line-height: 2rem;
         align-items: center;
@@ -93,7 +92,7 @@
         margin-right: 0.5rem;
       }
 
-      .link > span {
+      .link .name {
         flex-grow: 1;
         text-align: center;
         margin-right: 1.25rem;
@@ -113,64 +112,78 @@
   <body>
     <div class="wrapper">
       <h1 style="margin-top: 10vh">
-        <span style="font-size: 1.5rem; letter-spacing: .2rem;"> 肥超 </span>
-        <small style="font-size: 1.2rem; color: #999; margin-top: 0.25rem">
-          前端、Node
-        </small>
+        <span style="font-size: 1.5rem; letter-spacing: 0.2rem"> 肥超 </span>
+        <small style="font-size: 0.8rem; color: #999"> 前端可视化调包工程师 </small>
       </h1>
+
       <div class="parts" style="--color: #000">
         <div class="part">
           <p class="title">链接</p>
           <a
             class="link"
-            style="--color: #171516;"
+            style="--color: #171516"
             target="_blank"
             href="https://github.com/shinima/"
           >
             <img src="static/github-icon.png" alt="github-icon" />
-            <span>GitHub</span>
+            <span class="name">GitHub</span>
           </a>
           <a
             class="link"
-            style="--color: #348ce7;"
+            style="--color: #348ce7"
             target="_blank"
             href="https://www.zhihu.com/people/shifeichao/"
           >
-            <img src="static/zhihu.ico" alt="zhihu-icon" /> <span>知乎</span>
+            <img src="static/zhihu.ico" alt="zhihu-icon" />
+            <span class="name">知乎</span>
           </a>
           <a
             class="link"
-            style="--color: #52c577;"
+            style="--color: #52c577"
             target="_blank"
             href="https://www.yuque.com/shinima/blog"
           >
             <img src="static/yuque-icon.png" alt="yuque-icon" />
-            <span>博客</span>
+            <span class="name">博客</span>
           </a>
-          <a
-            class="link"
-            style="--color: #f44336;"
-            target="_blank"
-            href="resume/"
-          >
+          <a class="link" style="--color: #f44336" target="_blank" href="resume/">
             <img src="static/resume-icon.png" alt="resume-icon" />
-            <span>简历</span>
+            <span class="name">简历</span>
           </a>
         </div>
         <div class="part">
           <p class="title">项目</p>
           <a
             class="link small-text"
-            style="--color: #95d675;"
+            style="--color: #aaaaaa"
+            href="https://github.com/alibaba/ali-react-table"
+            target="_blank"
+          >
+            <span
+              style="
+                display: inline-block;
+                margin-left: 0.25rem;
+                width: 3rem;
+                text-align: center;
+                font-size: 0.4rem;
+              "
+            >
+              还缺个图
+            </span>
+            <span class="name">高性能 React 表格</span>
+          </a>
+          <a
+            class="link small-text"
+            style="--color: #95d675"
             href="https://github.com/redux-saga/redux-saga"
             target="_blank"
           >
             <img src="static/Redux-Saga-Logo.png" alt="redux-saga-logo" />
-            <span>Redux-Saga</span>
+            <span class="name">Redux-Saga</span>
           </a>
           <a
             class="link small-text"
-            style="--color: #e09a37;"
+            style="--color: #e09a37"
             href="https://battle-city.js.org"
             target="_blank"
           >
@@ -179,11 +192,11 @@
               alt="redux-saga-logo"
               style="width: 1.5rem; height: 1.5rem"
             />
-            <span>坦克大战</span>
+            <span class="name">坦克大战</span>
           </a>
           <a
             class="link small-text"
-            style="--color: #aaaaaa;"
+            style="--color: #aaaaaa"
             href="https://temme.js.org"
             target="_blank"
           >
@@ -192,7 +205,7 @@
               alt="redux-saga-logo"
               style="width: 1.25rem; height: 1.25rem"
             />
-            <span>temme 选择器</span>
+            <span class="name">temme 选择器</span>
           </a>
         </div>
       </div>

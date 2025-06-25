@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Resume</title>
+    <link rel="stylesheet" href="index.css" />
+    <link rel="icon" href="../static/resume-icon.png" />
+  </head>
+  <body>
+    <main>
+      <section style="margin: 1rem 0">
+        <h1>
+          <span class="name">史飞超</span>
+          <small class="subtitle">
+            前端 / Node.js / Java / Kotlin
+            <a href="https://github.com/feichao93" target="_blank">
+              <img
+                src="../static/github-icon.png"
+                alt="Github Mark"
+                width="16px"
+                height="16px"
+                style="margin-right: 4px"
+              />feichao93</a
+            >
+          </small>
+        </h1>
+      </section>
+      <section>
+        <span>微信号 feichao93</span> /
+        <span>大学英语六级</span>
+        <span class="sep"></span>
+      </section>
+
+      <section>
+        <h1>教育/工作经历</h1>
+        <ul class="edu-list">
+          <li class="edu-item">
+            <span class="time-range">2022.08 - 至今</span>
+            <span class="grade">技术专家</span>
+            <span class="major">阿里中台 NPM、开放平台等</span>
+          </li>
+          <li class="edu-item">
+            <span class="time-range">2019.04 - 2022.07</span>
+            <span class="grade">前端工程师 -> 前端技术专家</span>
+            <span class="major">盒马中后台业务、可视化、前端组件库等</span>
+          </li>
+          <li class="edu-item">
+            <span class="time-range">2016.09 - 2019.03</span>
+            <span class="grade">研究生 浙江大学</span>
+            <span class="major">计算机科学与技术专业</span>
+          </li>
+          <li class="edu-item">
+            <span class="time-range">2012.09 - 2016.06</span>
+            <span class="grade">本科 浙江大学</span>
+            <span class="major">软件工程专业</span>
+          </li>
+        </ul>
+      </section>
+      <section>
+        <h1>专业技能</h1>
+        <ul class="skill-list">
+          <li>熟练掌握前端 React 技术栈，深入了解前端状态管理、响应式编程</li>
+          <li>熟悉现代化研发流程与常见 CI/CD 流程，精通 NPM 包管理</li>
+          <li>熟练使用 Node.js 开发后端服务；熟悉使用 Java/Kotlin 开发 SpringBoot 项目</li>
+        </ul>
+      </section>
+      <section>
+        <h1>项目经历（整理中）</h1>
+        <section class="project">
+          <h2>
+            开放平台 MCP 网关
+          </h2>
+          <p>
+          负责阿里研发基础设施团队的 MCP 网关研发。
+          </p>
+          <p>
+          MCP 网关整合了研发基础内部的代码、项目协作、应用中心等多个内部平台的 MCP Server，
+          并支持多种方式（HTTP、HSF、OpenAPI 转换等）对接其他二方平台提供的 MCP 能力。
+          </p>
+          <p>
+          MCP 网关统一处理 OAuth 授权、长连接管理、日志监控、安全扫描、质量检测等横向能力，
+          减少 MCP 客户端或 MCP Server 的重复建设，并降低两者的集成成本。
+          </p>
+          <p>
+            技术栈：Kotlin / Spring Webflux / MCP Java SDK
+          </p>
+        </section>
+        <section class="project">
+          <h2>
+            Aone 开放平台
+          </h2>
+          负责阿里研发基础设施团队的开放平台建设，支持 API、MCP、扩展等开放能力。
+          （内容待补充）
+            <p>
+                技术栈：Spring MVC / Java / React / Ant Design
+            </p>
+        </section>
+        <section class="project">
+          <h2>
+            Ali NPM
+          </h2>
+          <p>负责阿里 NPM Registry 与命令行工具的研发。</p>
+            <p>
+              在阿里和蚂蚁两边基建分割的背景下，基于开源的
+              <a href="https://github.com/cnpm/cnpmcore" target="_blank">cnpmore</a>
+              开发阿里内部 NPM Registry，完成内部基础服务与中间件适配。
+              制定并实施 NPM Registry 切流计划，最终使阿里集团从使用蚂蚁的 registry 切换到 Ali NPM Registry。
+            </p>
+            <p>
+                负责 tnpm（阿里内部 npm cli）新版本开发。
+                调整 tnpm 锁依赖策略，使其与社区保持一致，与前端构建团队一起推动前端/Node.js 应用锁依赖。
+                优化 tnpm 依赖安装逻辑，引入 rust 替换耗时操作（解压 tgz 文件和复制文件），使 tnpm 在有锁文件文件依赖安装性能提升 3倍以上。
+            </p>
+            <p></p>
+
+          <p>技术栈：Node.js / TypeScript</p>
+
+        </section>
+        <section class="project">
+          <h2>
+            过往项目
+          </h2>
+          <p>详见: <a href="../resume-2021-05/">这里</a></p>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      var d = new Date()
+      var s =
+        d.getFullYear() +
+        '年' +
+        (d.getMonth() + 1) +
+        '月' +
+        d.getDate() +
+        '日' +
+        d.getHours() +
+        '时'
+      document.getElementById('current-time').innerText = s
+    </script>
+  </body>
+</html>

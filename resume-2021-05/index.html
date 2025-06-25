@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Resume</title>
+    <link rel="stylesheet" href="index.css" />
+    <link rel="icon" href="../static/resume-icon.png" />
+  </head>
+  <body>
+    <main>
+      <section style="margin: 1rem 0">
+        <h1>
+          <span class="name">史飞超</span>
+          <small class="subtitle">
+            前端可视化调包工程师 /
+            <a href="https://github.com/feichao93" target="_blank">
+              <img
+                src="../static/github-icon.png"
+                alt="Github Mark"
+                width="16px"
+                height="16px"
+                style="margin-right: 4px"
+              />feichao93</a
+            >
+            /
+            <a href="https://www.yuque.com/shinima/blog" target="_blank">
+              <img
+                src="../static/yuque-icon.png"
+                width="16px"
+                alt="yuque-icon"
+                style="margin-right: 4px"
+              />技术博客</a
+            >
+          </small>
+        </h1>
+      </section>
+      <section>
+        <span>微信号 feichao93</span> /
+        <span>大学英语六级</span>
+        <span class="sep"></span>
+      </section>
+      <img class="sfc" src="avatar.png" width="200px" height="200px" />
+
+      <section>
+        <h1>教育/工作经历</h1>
+        <ul class="edu-list">
+          <li class="edu-item">
+            <span class="time-range">2019.04 至今</span>
+            <span class="grade">高级前端工程师</span>
+            <span class="major">阿里巴巴 • 盒马体验技术部</span>
+          </li>
+          <li class="edu-item">
+            <span class="time-range">2016.09 - 2019.03</span>
+            <span class="grade">研究生 浙江大学</span>
+            <span class="major">计算机科学与技术专业</span>
+          </li>
+          <li class="edu-item">
+            <span class="time-range">2012.09 - 2016.06</span>
+            <span class="grade">本科 浙江大学</span>
+            <span class="major">软件工程专业</span>
+          </li>
+        </ul>
+      </section>
+      <section>
+        <h1>专业技能</h1>
+        <ul class="skill-list">
+          <li>熟练使用 React，Redux，Immutable.js，Cycle.js，Redux-Saga, MobX 等类库</li>
+          <li>熟悉 ES2015+ 与 TypeScript，掌握前端状态管理、响应式编程</li>
+          <li>了解词法分析、语法分析等相关编译原理前端知识</li>
+          <li>了解 Webpack，Babel，TypeScript，ESLint 等前端工具链的配置与使用</li>
+          <li>了解 Node 和 Koa 后台开发；了解 Java 和 Python</li>
+        </ul>
+      </section>
+      <section>
+        <h1>项目经历</h1>
+        <section class="project">
+          <h2>
+            高性能 React 表格组件
+            <iframe
+              src="https://ghbtns.com/github-btn.html?user=alibaba&repo=ali-react-table&type=star&count=true"
+              frameborder="0"
+              scrolling="0"
+              width="170px"
+              height="20px"
+            >
+            </iframe>
+          </h2>
+          高性能的 React 表格组件，数据量较大时自动开启虚拟滚动，支持 10 万行 /
+          10万列数据的渲染。组件拥有简单灵活的 API，提供丰富的定制能力。
+          组件提供了实用的表格特性，包括表头吸顶、左右侧锁列、粘性定位的滚动条、单元格合并等。
+
+          <br />组件介绍：
+          <a href="https://zhuanlan.zhihu.com/p/130755755" target="_blank">
+            https://zhuanlan.zhihu.com/p/130755755
+          </a>
+          <br />项目地址：
+          <a href="https://github.com/alibaba/ali-react-table" target="_blank">
+            https://github.com/alibaba/ali-react-table
+          </a>
+        </section>
+        <section class="project">
+          <h2>
+            坦克大战复刻版
+            <iframe
+              src="https://ghbtns.com/github-btn.html?user=feichao93&repo=battle-city&type=star&count=true"
+              frameborder="0"
+              scrolling="0"
+              width="170px"
+              height="20px"
+            >
+            </iframe>
+          </h2>
+          基于原版素材，主要使用 TypeScript 和 React 进行实现，独立完成整体框架设计与具体实现；
+          技术选型方面主要使用 React 生成 SVG，使用 Immutable.js 构建游戏数据结构， 使用 Redux
+          管理全局数据，使用 redux-saga 处理复杂的游戏逻辑；
+          针对鼠标的交互方式设计并实现了新的关卡编辑器，并提供了关卡管理功能。
+          <br />游戏地址：
+          <a href="https://feichao93.github.io/battle-city/" target="_blank">
+            https://feichao93.github.io/battle-city/
+          </a>
+          <br />完整项目介绍：
+          <a href="https://zhuanlan.zhihu.com/p/35551654" target="_blank">
+            https://zhuanlan.zhihu.com/p/35551654
+          </a>
+        </section>
+        <section class="project">
+          <h2>redux-saga / little-saga</h2>
+          我是开源项目
+          <a href="https://github.com/redux-saga/redux-saga" target="_blank"> redux-saga </a>
+          的协作者（collaborator）之一，目前和其他协作者一起维护该项目。 我对 redux-saga
+          源码有较深的理解，也给 redux-saga 贡献过不少核心代码。
+          <br />
+          而 little-saga 是我自己根据 redux-saga 源码修改而来的简化版本，little-saga
+          去掉了一些不常用的特性，并使用了更现代化的 JavaScript 进行编写，主要目的是帮助更多人理解
+          redux-saga/little-saga 的原理。 little-saga 采用了更加面向对象的方式实现了
+          saga-runtime，允许用户自定义 effect 类型，具有良好的拓展性。
+          <br />项目地址：
+          <a href="https://github.com/little-saga/little-saga" target="_blank">
+            https://github.com/little-saga/little-saga
+          </a>
+        </section>
+        <section class="project">
+          <h2>
+            temme
+            <iframe
+              src="https://ghbtns.com/github-btn.html?user=feichao93&repo=temme&type=star&count=true"
+              frameborder="0"
+              scrolling="0"
+              width="170px"
+              height="20px"
+            ></iframe>
+          </h2>
+          从 HTML 中提取 JSON 数据的开源工具。在 CSS 选择器的基础上使用 PEG.js
+          定义了额外的语法来抓取 HTML 中所需要的字段，支持多字段选取、列表选取、格式处理等功能。
+          该工具包含了完善的文档、测试、实例，设置了持续集成并发布在 NPM 上。 我也为该工具实现了
+          VSCode 插件，插件提供语法高亮和执行选择器的功能。
+
+          <br />项目地址：
+          <a href="https://github.com/feichao93/temme" target="_blank">
+            https://github.com/feichao93/temme
+          </a>
+        </section>
+        <section class="project">
+          <h2>
+            简易 SVG 编辑器
+            <iframe
+              src="https://ghbtns.com/github-btn.html?user=feichao93&repo=trips-editor&type=star&count=true"
+              frameborder="0"
+              scrolling="0"
+              width="170px"
+              height="20px"
+            ></iframe>
+          </h2>
+          该编辑器主要功能是绘制多边形等形状，以及将语义信息附加到绘制的形状上。
+          编辑器提供了丰富的快捷键和自动对齐功能，可以完成较为复杂的图形绘制。
+          编辑器采用了响应式编程框架
+          Cycle.js，对键盘、鼠标、用户行为等进行了合理抽象，用简洁直观的代码清晰地描述出了应用的数据流。
+          该编辑器是
+          <a href="https://longaspire.github.io/trips/" target="_blank"> TRIPS 系统 </a>
+          的室内空间建模工具；而 TRIPS 论文已经被 VLDB 2018 接受。 项目地址：
+          <a href="https://github.com/feichao93/editor" target="_blank">
+            https://github.com/feichao93/editor
+          </a>
+        </section>
+      </section>
+      <section class="print-only" style="margin-top: 1rem">
+        目前正在查看的简历版本是
+        <span id="current-time"></span> 的快照，可以访问
+        <a href="https://feichao93.github.io/resume/" target="_blank"> https://feichao93.github.io/resume/ </a>
+        来获取最新版本。
+      </section>
+    </main>
+
+    <script>
+      var d = new Date()
+      var s =
+        d.getFullYear() +
+        '年' +
+        (d.getMonth() + 1) +
+        '月' +
+        d.getDate() +
+        '日' +
+        d.getHours() +
+        '时'
+      document.getElementById('current-time').innerText = s
+    </script>
+  </body>
+</html>

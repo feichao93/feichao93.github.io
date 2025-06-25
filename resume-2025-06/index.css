@@ -1,0 +1,123 @@
+html {
+  font-size: 16px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+body {
+  padding-bottom: 16px;
+}
+
+.sfc {
+  border: 2px solid #cccccc;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.sep {
+  display: block;
+}
+
+.print-only {
+  display: none;
+}
+
+@media print {
+  .print-only {
+    display: block;
+  }
+}
+
+.no-print * {
+  color: steelblue;
+}
+
+.no-print {
+  color: steelblue;
+}
+
+@media print {
+  .no-print {
+    display: none;
+  }
+}
+
+@media (min-width: 920px), print {
+  body {
+    width: 900px;
+    margin: auto;
+  }
+
+  .sep {
+    display: inline;
+  }
+}
+
+.subtitle {
+  color: #666666;
+  font-weight: normal;
+  font-size: 1rem;
+}
+
+section {
+  color: #444444;
+}
+
+section > h1 {
+  margin-top: 0.5em;
+  margin-bottom: 0.3em;
+  color: #333333;
+}
+
+.edu-list {
+  list-style: none;
+  padding-left: 1.5rem;
+  margin: 0;
+}
+
+.edu-item {
+  display: flex;
+  flex-direction: column;
+  line-height: 2rem;
+}
+
+.grade,
+.major {
+  padding-left: 1rem;
+}
+
+@media (min-width: 920px), print {
+  .edu-item {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .edu-item .time-range {
+    flex: 0 0 200px;
+  }
+
+  .edu-item .grade {
+    flex: 0 0 220px;
+  }
+}
+
+.skill-list {
+  padding-left: 36px;
+  margin: 0;
+}
+
+.skill-list > li {
+  line-height: 2rem;
+}
+
+.project {
+  line-height: 1.75;
+}
+
+.project > h2 {
+  font-size: 1.15rem;
+  margin-bottom: 0.4em;
+}
+
+.small-project {
+  margin: 0.4em 0;
+}
